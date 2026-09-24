@@ -1,0 +1,24 @@
+[project]
+name = "python-service"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "asyncpg>=0.31.0",
+    "einops>=0.8.2",
+    "fastapi[standard]>=0.141.1",
+    "greenlet>=3.5.6",
+    "httpx>=0.28.1",
+    "pgvector>=0.5.0",
+    "pillow>=12.3.0",
+    "psycopg[binary]>=3.3.6",
+    "pydantic>=2.13.5",
+    "pydantic-settings>=2.15.0",
+    "python-dotenv>=1.2.3",
+    "requests>=2.34.2",
+    "sqlalchemy>=2.0.54",
+    "timm>=1.0.30",
+    "torchvision>=0.29.0",
+    "transformers==4.48.0",
+]

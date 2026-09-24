@@ -1,0 +1,18 @@
+services:
+  db:
+    image: pgvector/pgvector:pg18
+    env_file:
+      - .env
+    container_name: repo-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./db/init:/docker-entrypoint-initdb.d
+
+volumes:
+  pgdata:
