@@ -130,8 +130,8 @@ func (h *Handler) Search(w http.ResponseWriter, r *http.Request) error {
 		result.Results[i] = searchResult{AssetId: e.AssetId, Similarity: e.Similarity}
 	}
 
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(&result); err != nil {
 		return err
