@@ -25,9 +25,8 @@ func init() {
 
 	envPath := filepath.Join(filepath.Dir(wd), ".env")
 
-	if err := godotenv.Load(envPath); err != nil {
-		panic(err)
-	}
+	// Optional: in containers the variables come from the environment.
+	_ = godotenv.Load(envPath)
 
 	DBUser = os.Getenv("POSTGRES_USER")
 	DBPassword = os.Getenv("POSTGRES_PASSWORD")

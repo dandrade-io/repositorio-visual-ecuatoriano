@@ -11,6 +11,7 @@ import { rxResource } from '@angular/core/rxjs-interop';
 })
 export class HomeLayout {
   private assetsService = inject(AssetsService);
+  protected readonly imageUrl = (id: string | number) => this.assetsService.imageUrl(id);
   protected readonly query = signal<string | undefined>(undefined);
 
   protected readonly assetsResource = rxResource({

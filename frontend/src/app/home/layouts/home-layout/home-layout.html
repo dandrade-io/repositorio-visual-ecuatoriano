@@ -7,7 +7,7 @@
     <ul class="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
       @for (result of assetsResource.value().results; track result.assetId) {
         <li class="aspect-square overflow-hidden rounded-xl border border-black/10 bg-gray-50">
-          <img [src]="`http://localhost:8080/api/v1/assets/image/${result.assetId}`" alt="" loading="lazy"
+          <img [src]="imageUrl(result.assetId)" alt="" loading="lazy"
             class="h-full w-full object-cover transition-transform duration-300 hover:scale-105" />
         </li>
       } @empty {

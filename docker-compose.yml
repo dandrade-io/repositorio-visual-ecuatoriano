@@ -1,18 +1,66 @@
 services:
-  db:
-    image: pgvector/pgvector:pg18
+  frontend:
+    container_name: frontend
+    profiles: ["app"]
+    build:
+      context: ./frontend
+    ports:
+      - "4200:8080"
+
+  backend:
+    container_name: backend
+    profiles: ["app"]
+    build:
+      context: ./go-backend
     env_file:
       - .env
-    container_name: repo-db
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      EMBED_SERVICE_BASE_URL: http://service:8001
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./assets-storage:/assets-storage
+    networks:
+      - public
+      - private
+    depends_on:
+      db:
+        condition: service_healthy
+
+  service:
+    container_name: service
+    profiles: ["app"]
+    build:
+      context: ./python-service
+    volumes:
+      - hf-cache:/home/app/.cache/huggingface
+    networks:
+      - private
+
+  db:
+    image: pgvector/pgvector:pg18
+    container_name: repo-db
+    env_file:
+      - .env
     ports:
       - "${POSTGRES_PORT}:5432"
     volumes:
       - pgdata:/var/lib/postgresql
       - ./db/init:/docker-entrypoint-initdb.d
+    networks:
+      - private
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+networks:
+  public:
+  private:
 
 volumes:
   pgdata:
+  hf-cache:
