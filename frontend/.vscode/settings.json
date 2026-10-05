@@ -4,5 +4,8 @@
             "externalTemplate": true,
             "skipStyle": true
         }
+    },
+    "[html]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
     }
 }

@@ -15,6 +15,9 @@ var (
 	DBName          string
 	EmbedServiceURL string
 	PublicBaseURL   string
+	LLMBaseUrl      string
+	LLMApiKey       string
+	LLMModel        string
 )
 
 func init() {
@@ -35,4 +38,7 @@ func init() {
 	DBName = os.Getenv("POSTGRES_DB")
 	EmbedServiceURL = os.Getenv("EMBED_SERVICE_BASE_URL")
 	PublicBaseURL = os.Getenv("BACKEND_BASE_URL")
+	LLMBaseUrl = os.Getenv("LLM_BASE_URL")
+	LLMApiKey = os.Getenv("LLM_API_KEY")
+	LLMModel = os.Getenv("LLM_NAME")
 }

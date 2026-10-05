@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"repository/assets"
+	"repository/assets/albumcover"
 	"repository/database"
 	transporthttp "repository/transport/http"
 	"sync"
@@ -25,6 +26,7 @@ func main() {
 
 	assetsService := assets.Service{}
 	assetsHandler := assets.Handler{Service: assetsService}
+	albumcoverHandler := albumcover.Handler{}
 
 	mux := http.NewServeMux()
 
@@ -32,6 +34,8 @@ func main() {
 	mux.Handle("GET /api/v1/assets/{path...}", transporthttp.AppHandler(assetsHandler.Get))
 	mux.Handle("POST /api/v1/assets", transporthttp.AppHandler(assetsHandler.Upload))
 	mux.Handle("POST /api/v1/assets/{id}/embeddings", transporthttp.AppHandler(assetsHandler.Embed))
+
+	mux.Handle("POST /api/v1/metadata/album-cover", transporthttp.AppHandler(albumcoverHandler.Metadata))
 
 	server := &http.Server{
 		Addr:    ":8080",

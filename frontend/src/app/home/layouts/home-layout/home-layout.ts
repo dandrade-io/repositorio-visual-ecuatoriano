@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { SearchBar } from '../../components/search-bar/search-bar';
-import { AssetsService } from '../../../assets/services/assets-service';
+import { AssetsService } from '../../../assets/services/assets.service';
 import { rxResource } from '@angular/core/rxjs-interop';
 
 @Component({

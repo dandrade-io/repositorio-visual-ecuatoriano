@@ -5,6 +5,7 @@ import {
   AssetSearchApiResponse,
   AsssetSearchResponse,
 } from '../interfaces/asset-search-response.interface';
+import { API_BASE_URL } from '../../shared/config/app.constants';
 
 export type AssetKind = 'image' | 'audio';
 export type EmbeddingModel = 'jina-clip-v2';
@@ -16,14 +17,6 @@ export interface AssetSearchParams {
   limit?: number;
 }
 
-declare global {
-  interface Window {
-    __env?: { BACKEND_BASE_URL?: string };
-  }
-}
-
-const BACKEND_BASE_URL = (window.__env?.BACKEND_BASE_URL ?? 'http://localhost:8080').replace(/\/$/, '');
-
 @Injectable({
   providedIn: 'root',
 })
@@ -31,7 +24,7 @@ export class AssetsService {
   private http = inject(HttpClient);
 
   imageUrl(assetId: string | number): string {
-    return `${BACKEND_BASE_URL}/api/v1/assets/image/${assetId}`;
+    return `${API_BASE_URL}/assets/image/${assetId}`;
   }
 
   search({ q, kind, model, limit }: AssetSearchParams): Observable<AsssetSearchResponse> {
@@ -42,7 +35,7 @@ export class AssetsService {
     console.log({ q, kind, model, limit });
 
     return this.http
-      .get<AssetSearchApiResponse>(`${BACKEND_BASE_URL}/api/v1/assets/search`, { params })
+      .get<AssetSearchApiResponse>(`${API_BASE_URL}/assets/search`, { params })
       .pipe(
         tap((resp) => console.log(resp)),
         map((resp) => ({

@@ -1,0 +1,9 @@
+<div>
+  <input-label for="" [label]="label()" />
+  <div class="h-1.5"></div>
+  <div class="flex flex-wrap gap-2">
+    @for (opt of options(); track opt.value) {
+    <app-chip-item [option]="opt" [isSelected]="value() === opt.value" (click)="onChipItemPressed(opt.value)" />
+    }
+  </div>
+</div>
