@@ -1,29 +1,28 @@
-<form [formGroup]="form" (ngSubmit)="submit()">
+<form [formGroup]="form" (ngSubmit)="submit()" (keydown.enter)="$event.preventDefault()">
   <div class="flex items-center justify-between">
     <h1 class="text-[#1C1917] text-[24px]">Registro de Portada</h1>
 
     @if (previewUrl()) {
-      <button
-        type="button"
-        class="flex flex-row items-center px-4.5 py-1.5 rounded-[5px] bg-[#B34E2C]/90 text-white hover:bg-[#B34E2C]/85 disabled:opacity-50"
-        [disabled]="albumCoverResource.isLoading()"
+      <app-button
         (click)="autofillWithAi()"
+        color="#B34E2C"
+        [disabled]="albumCoverResource.isLoading()"
+        class="h-10"
       >
-        Autocompletar
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" class="size-5">
+            <path
+              fill-rule="evenodd"
+              d="M9 4.5a.75.75 0 0 1 .721.544l.813 2.846a3.75 3.75 0 0 0 2.576 2.576l2.846.813a.75.75 0 0 1 0 1.442l-2.846.813a3.75 3.75 0 0 0-2.576 2.576l-.813 2.846a.75.75 0 0 1-1.442 0l-.813-2.846a3.75 3.75 0 0 0-2.576-2.576l-2.846-.813a.75.75 0 0 1 0-1.442l2.846-.813A3.75 3.75 0 0 0 7.466 7.89l.813-2.846A.75.75 0 0 1 9 4.5ZM18 1.5a.75.75 0 0 1 .728.568l.258 1.036c.236.94.97 1.674 1.91 1.91l1.036.258a.75.75 0 0 1 0 1.456l-1.036.258c-.94.236-1.674.97-1.91 1.91l-.258 1.036a.75.75 0 0 1-1.456 0l-.258-1.036a2.625 2.625 0 0 0-1.91-1.91l-1.036-.258a.75.75 0 0 1 0-1.456l1.036-.258a2.625 2.625 0 0 0 1.91-1.91l.258-1.036A.75.75 0 0 1 18 1.5ZM16.5 15a.75.75 0 0 1 .712.513l.394 1.183c.15.447.5.799.948.948l1.183.395a.75.75 0 0 1 0 1.422l-1.183.395c-.447.15-.799.5-.948.948l-.395 1.183a.75.75 0 0 1-1.422 0l-.395-1.183a1.5 1.5 0 0 0-.948-.948l-1.183-.395a.75.75 0 0 1 0-1.422l1.183-.395c.447-.15.799-.5.948-.948l.395-1.183A.75.75 0 0 1 16.5 15Z"
+              clip-rule="evenodd"
+            />
+          </svg>
 
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="white"
-          class="ml-2 size-4"
-        >
-          <path
-            fill-rule="evenodd"
-            d="M9 4.5a.75.75 0 0 1 .721.544l.813 2.846a3.75 3.75 0 0 0 2.576 2.576l2.846.813a.75.75 0 0 1 0 1.442l-2.846.813a3.75 3.75 0 0 0-2.576 2.576l-.813 2.846a.75.75 0 0 1-1.442 0l-.813-2.846a3.75 3.75 0 0 0-2.576-2.576l-2.846-.813a.75.75 0 0 1 0-1.442l2.846-.813A3.75 3.75 0 0 0 7.466 7.89l.813-2.846A.75.75 0 0 1 9 4.5ZM18 1.5a.75.75 0 0 1 .728.568l.258 1.036c.236.94.97 1.674 1.91 1.91l1.036.258a.75.75 0 0 1 0 1.456l-1.036.258c-.94.236-1.674.97-1.91 1.91l-.258 1.036a.75.75 0 0 1-1.456 0l-.258-1.036a2.625 2.625 0 0 0-1.91-1.91l-1.036-.258a.75.75 0 0 1 0-1.456l1.036-.258a2.625 2.625 0 0 0 1.91-1.91l.258-1.036A.75.75 0 0 1 18 1.5ZM16.5 15a.75.75 0 0 1 .712.513l.394 1.183c.15.447.5.799.948.948l1.183.395a.75.75 0 0 1 0 1.422l-1.183.395c-.447.15-.799.5-.948.948l-.395 1.183a.75.75 0 0 1-1.422 0l-.395-1.183a1.5 1.5 0 0 0-.948-.948l-1.183-.395a.75.75 0 0 1 0-1.422l1.183-.395c.447-.15.799-.5.948-.948l.395-1.183A.75.75 0 0 1 16.5 15Z"
-            clip-rule="evenodd"
-          />
-        </svg>
-      </button>
+          <div class="w-2"></div>
+
+          Autocompletar
+        </div>
+      </app-button>
     }
   </div>
 
@@ -33,7 +32,7 @@
     <app-container>
       <div
         class="w-75 h-75 flex items-center justify-center rounded-[10px]"
-        [ngClass]="previewUrl() ? '' : 'border border-dashed'"
+        [ngClass]="assetResource.value() && previewUrl() ? '' : 'border border-dashed'"
       >
         <input
           #inputFile
@@ -43,38 +42,44 @@
           (change)="onFileSelected(inputFile)"
         />
 
-        @if (previewUrl(); as url) {
-          <div class="group relative" (click)="inputFile.click()">
-            <img
-              [src]="url"
-              alt=""
-              class="object-cover w-full h-full rounded-[10px] transition duration-200 group-hover:brightness-60"
-            />
+        @if (assetResource.value()) {
+          @if (previewUrl(); as url) {
+            <div class="group relative" (click)="inputFile.click()">
+              <img
+                [src]="url"
+                alt=""
+                class="object-cover w-full h-full rounded-[10px] transition duration-200 group-hover:brightness-60"
+              />
 
-            <button
-              type="button"
-              aria-label="Cambiar imagen"
-              title="Cambiar imagen"
-              class="absolute left-1/2 top-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
-              (click)="inputFile.click()"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="white"
-                class="size-6"
+              <button
+                type="button"
+                aria-label="Cambiar imagen"
+                title="Cambiar imagen"
+                class="absolute left-1/2 top-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+                (click)="inputFile.click()"
               >
-                <path
-                  d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z"
-                />
-              </svg>
-            </button>
-          </div>
-        } @else {
-          <app-outlined-button text="Buscar imagen" color="#444444" (click)="inputFile.click()" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="white"
+                  class="size-6"
+                >
+                  <path
+                    d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z"
+                  />
+                </svg>
+              </button>
+            </div>
+          }
+        } @else if (!assetResource.isLoading()) {
+          <app-button
+            variant="outlined"
+            color="#444444"
+            (click)="inputFile.click()"
+            class="h-10 cursor-pointer"
+            >Buscar imagen</app-button
+          >
         }
-
-        <!-- <app-outlined-button text="Buscar imagen" color="#444444" (click)="inputFile.click()" /> -->
       </div>
     </app-container>
 
@@ -82,13 +87,48 @@
 
     <app-container class="grow">
       <div class="h-75">
-        <input-text label="Título" formControlName="title" />
+        <div class="flex items-end gap-2">
+          <input-text class="grow" label="Título" formControlName="title" />
+          <app-verify-button
+            [role]="authService.verifierRole()"
+            [disabled]="!hasValue().title"
+            [verified]="verified().title"
+            (verifiedChange)="setVerified('title', $event)"
+          />
+        </div>
+
         <div class="h-3"></div>
-        <input-text label="Año" formControlName="year" />
+        <div class="flex items-end gap-2">
+          <input-text class="grow" label="Año" formControlName="year" />
+          <app-verify-button
+            [role]="authService.verifierRole()"
+            [disabled]="!hasValue().year"
+            [verified]="verified().year"
+            (verifiedChange)="setVerified('year', $event)"
+          />
+        </div>
+
         <div class="h-3"></div>
-        <input-text label="Artista" formControlName="artist" />
+        <div class="flex items-end gap-2">
+          <input-text class="grow" label="Artista" formControlName="artist" />
+          <app-verify-button
+            [role]="authService.verifierRole()"
+            [disabled]="!hasValue().artist"
+            [verified]="verified().artist"
+            (verifiedChange)="setVerified('artist', $event)"
+          />
+        </div>
+
         <div class="h-3"></div>
-        <input-text label="Ritmos musicales" formControlName="rhythms" />
+        <div class="flex items-end gap-2">
+          <input-text class="grow" label="Ritmos musicales" formControlName="rhythms" />
+          <app-verify-button
+            [role]="authService.verifierRole()"
+            [disabled]="!hasValue().rhythms"
+            [verified]="verified().rhythms"
+            (verifiedChange)="setVerified('rhythms', $event)"
+          />
+        </div>
       </div>
     </app-container>
   </div>
@@ -96,11 +136,20 @@
   <div class="h-4"></div>
 
   <app-container>
-    <app-chip-group
-      label="Técnica de Representación"
-      formControlName="representationTechnique"
-      [options]="techniqueOptions()"
-    />
+    <div class="flex items-end gap-2">
+      <app-chip-group
+        class="grow"
+        label="Técnica de Representación"
+        formControlName="representationTechnique"
+        [options]="techniqueOptions()"
+      />
+      <app-verify-button
+        [role]="authService.verifierRole()"
+        [disabled]="!hasValue().representationTechnique"
+        [verified]="verified().representationTechnique"
+        (verifiedChange)="setVerified('representationTechnique', $event)"
+      />
+    </div>
 
     <div class="py-4">
       <hr class="border-0 border-t border-[#E7E1D8]" />
@@ -121,20 +170,47 @@
           ></div>
         }
       }
+
+      <app-verify-button
+        class="ml-auto"
+        [role]="authService.verifierRole()"
+        [disabled]="!hasValue().graphicPredominance"
+        [verified]="verified().graphicPredominance"
+        (verifiedChange)="setVerified('graphicPredominance', $event)"
+      />
     </div>
 
     <div class="py-4">
       <hr class="border-0 border-t border-[#E7E1D8]" />
     </div>
 
-    <app-chip-group
-      label="Sintaxis del título (relación con)"
-      formControlName="titleSyntax"
-      [options]="titleSyntaxOptions()"
-    />
+    <div class="flex items-end gap-2">
+      <app-chip-group
+        class="grow"
+        label="Sintaxis del título (relación con)"
+        formControlName="titleSyntax"
+        [options]="titleSyntaxOptions()"
+      />
+      <app-verify-button
+        [role]="authService.verifierRole()"
+        [disabled]="!hasValue().titleSyntax"
+        [verified]="verified().titleSyntax"
+        (verifiedChange)="setVerified('titleSyntax', $event)"
+      />
+    </div>
   </app-container>
 
-  <div class="flex mt-5 justify-end w-full">
-    <app-post-button />
+  <div class="h-8"></div>
+
+  <div class="flex justify-end w-full gap-3">
+    <button
+      type="button"
+      class="rounded-[5px] border border-[#17362A] px-6 py-2 text-[#17362A] hover:bg-[#17362A]/5 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+      [disabled]="!canVerifyAll()"
+      (click)="verifyAll()"
+    >
+      Verificar todo
+    </button>
+    <app-post-button [disabled]="!submitAllowed() || albumCoverResource.isLoading()" />
   </div>
 </form>

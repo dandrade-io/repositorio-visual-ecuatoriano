@@ -2,42 +2,20 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	"repository/embedding"
 	"uuid"
 
 	"github.com/pgvector/pgvector-go"
 )
 
-type Model int
-
-const (
-	JinaClipV2 Model = iota
-)
-
-func (m Model) String() string {
+func embeddingModelToTableName(m embedding.Model) string {
 	switch m {
-	case JinaClipV2:
-		return "jina-clip-v2"
-	default:
-		return ""
-	}
-}
-
-func (m Model) toTableName() string {
-	switch m {
-	case JinaClipV2:
+	case embedding.JinaClipV2:
 		return "jina_clip_v2"
 	default:
 		return ""
-	}
-}
-
-func ParseModel(val string) (Model, error) {
-	switch val {
-	case "jina-clip-v2":
-		return JinaClipV2, nil
-	default:
-		return 0, fmt.Errorf("unknown model: %s", val)
 	}
 }
 
@@ -46,8 +24,13 @@ type Embedding struct {
 	Vector  pgvector.Vector
 }
 
-func CreateEmbedding(e Embedding, m Model) error {
-	_, err := db.Exec("INSERT INTO embedding_"+m.toTableName()+" (asset_id, embedding) VALUES($1, $2)", e.AssetID, e.Vector)
+func createEmbeddingQuery(e Embedding, m embedding.Model) (string, []any) {
+	return "INSERT INTO embedding_" + embeddingModelToTableName(m) + " (asset_id, embedding) VALUES($1, $2)", []any{e.AssetID, e.Vector}
+}
+
+func InsertEmbedding(e Embedding, m embedding.Model) error {
+	q, args := createEmbeddingQuery(e, m)
+	_, err := db.Exec(q, args...)
 
 	if err != nil {
 		return err
@@ -56,15 +39,22 @@ func CreateEmbedding(e Embedding, m Model) error {
 	return nil
 }
 
+func InsertEmbeddingTx(ctx context.Context, tx *sql.Tx, e Embedding, m embedding.Model) error {
+	q, args := createEmbeddingQuery(e, m)
+	_, err := tx.ExecContext(ctx, q, args...)
+
+	return err
+}
+
 type EmbeddingCoincidence struct {
 	AssetId    uuid.UUID
 	Similarity float32
 }
 
-func GetKBest(ctx context.Context, m Model, vector pgvector.Vector, limit int) ([]EmbeddingCoincidence, error) {
+func GetKBest(ctx context.Context, m embedding.Model, vector pgvector.Vector, limit int) ([]EmbeddingCoincidence, error) {
 	query := `
 		SELECT asset_id, (1 - (embedding <=> $1)) AS similarity
-		FROM embedding_` + m.toTableName() + `
+		FROM embedding_` + embeddingModelToTableName(m) + `
 		ORDER BY embedding <=> $1
 		LIMIT $2
 		`
@@ -83,6 +73,10 @@ func GetKBest(ctx context.Context, m Model, vector pgvector.Vector, limit int) (
 			return nil, err
 		}
 		results = append(results, ec)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
 	}
 
 	return results, nil

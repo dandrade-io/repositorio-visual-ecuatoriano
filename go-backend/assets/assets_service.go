@@ -3,19 +3,13 @@ package assets
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"image"
-	"image/jpeg"
-	_ "image/jpeg"
-	_ "image/png"
 	"io"
-	"net/http"
 	"path/filepath"
-	"repository/config"
 	"repository/database"
-	embedservice "repository/embed"
+	"repository/embedding"
 	"repository/files"
+	"repository/media"
 	"uuid"
 
 	"github.com/pgvector/pgvector-go"
@@ -23,24 +17,40 @@ import (
 
 type Service struct{}
 
-func (s *Service) Ingest(ctx context.Context, file io.Reader, kind string, model database.Model) error {
-	asset, err := s.Create(file, kind)
+func (s *Service) Ingest(ctx context.Context, file io.Reader, kind string, model embedding.Model, userID uuid.UUID) error {
+	asset, err := s.Create(ctx, file, kind, userID)
 	if err != nil {
 		return err
 	}
 
-	if err := s.embed(ctx, asset, model); err != nil {
+	if err := s.embedAndSave(ctx, asset, model); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *Service) Create(file io.Reader, kind string) (database.Asset, error) {
-	if kind == "image" {
-		compressed, err := compressImg(file, 85)
+func (s *Service) Create(ctx context.Context, file io.Reader, kind string, userID uuid.UUID) (database.Asset, error) {
+	id, path, err := s.SaveLocally(file, kind)
+	if err != nil {
+		return database.Asset{}, fmt.Errorf("unable to save asset locally: %w", err)
+	}
+
+	var a = database.Asset{ID: id, Path: path, Kind: kind, UploadedBy: userID}
+	if err := database.InsertAsset(ctx, a); err != nil {
+		return database.Asset{}, fmt.Errorf("failed to insert asset: %w", err)
+	}
+
+	return a, nil
+}
+
+// SaveLocally saves file in the filesystem
+func (s *Service) SaveLocally(file io.Reader, kind string) (uuid.UUID, string, error) {
+	switch kind {
+	case "image":
+		compressed, err := media.CompressImg(file, 85)
 		if err != nil {
-			return database.Asset{}, err
+			return uuid.Nil(), "", err
 		}
 		file = bytes.NewReader(compressed)
 	}
@@ -48,86 +58,63 @@ func (s *Service) Create(file io.Reader, kind string) (database.Asset, error) {
 	id := uuid.NewV7()
 	path, err := files.SaveFile(file, filepath.Join(kind, id.String()))
 	if err != nil {
-		return database.Asset{}, fmt.Errorf("unable to save asset locally: %w", err)
+		return uuid.Nil(), "", err
 	}
 
-	if err := database.CreateAsset(database.Asset{ID: id, Path: path, Kind: "image"}); err != nil {
-		return database.Asset{}, fmt.Errorf("unable to store asset in db: %w", err)
-	}
-
-	return database.Asset{ID: id, Path: path, Kind: kind}, nil
+	return id, path, nil
 }
 
-func (s *Service) EmbedByAssetID(ctx context.Context, assetID uuid.UUID, model database.Model) error {
+func (s *Service) EmbedByAssetID(ctx context.Context, assetID uuid.UUID, model embedding.Model) error {
 	asset, err := database.GetAssetByID(ctx, assetID)
 	if err != nil {
 		return err
 	}
 
-	return s.embed(ctx, asset, model)
+	return s.embedAndSave(ctx, asset, model)
 }
 
-func (s *Service) embed(ctx context.Context, asset database.Asset, model database.Model) error {
-	body := &bytes.Buffer{}
-	payload := extractEmbeddingsReq{AssetURL: config.PublicBaseURL + "/api/v1/assets/" + asset.Path, Model: model.String()}
-	if err := json.NewEncoder(body).Encode(&payload); err != nil {
-		return err
-	}
-
-	url := config.EmbedServiceURL + "/api/v1/embed/" + asset.Kind
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, body)
+func (s *Service) embedAndSave(ctx context.Context, asset database.Asset, model embedding.Model) error {
+	embedding, err := embedding.EmbedAsset(ctx, asset.Path, asset.Kind, model)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to embed: %w", err)
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("failed to make http petition: %w", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode >= 400 {
-		b, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("failed to make request (%d): %s", resp.StatusCode, string(b))
-	}
-
-	var embeddingResp extractEmbeddingResp
-	if err := json.NewDecoder(resp.Body).Decode(&embeddingResp); err != nil {
-		return err
-	}
-
-	entity := database.Embedding{AssetID: asset.ID, Vector: pgvector.NewVector(embeddingResp.Embedding)}
-	if err := database.CreateEmbedding(entity, model); err != nil {
+	entity := database.Embedding{AssetID: asset.ID, Vector: pgvector.NewVector(embedding)}
+	if err := database.InsertEmbedding(entity, model); err != nil {
 		return fmt.Errorf("unable to store embeddings in db: %w", err)
 	}
 
 	return nil
 }
 
-func (s *Service) search(ctx context.Context, query string, model database.Model, limit int) ([]database.EmbeddingCoincidence, error) {
-	embed, err := embedservice.Text(ctx, query, model)
+func (s *Service) search(ctx context.Context, query string, m embedding.Model, limit int) (searchResults, error) {
+	embedding, err := embedding.EmbedText(ctx, query, m)
 	if err != nil {
-		return nil, fmt.Errorf("unable to compute embedding for text: %w", err)
+		return searchResults{}, fmt.Errorf("unable to compute embedding for text: %w", err)
 	}
 
-	best, err := database.GetKBest(ctx, model, pgvector.NewVector(embed.Embedding), limit)
+	kBest, err := database.GetKBest(ctx, m, pgvector.NewVector(embedding), limit)
 	if err != nil {
-		return nil, fmt.Errorf("unable to search for k-best coincidence: %w", err)
+		return searchResults{}, fmt.Errorf("unable to search for k-best coincidence: %w", err)
 	}
 
-	return best, nil
-}
+	assetIDs := make([]uuid.UUID, len(kBest))
+	for i := range kBest {
+		assetIDs[i] = kBest[i].AssetId
+	}
 
-func compressImg(r io.Reader, quality int) ([]byte, error) {
-	img, _, err := image.Decode(r)
+	albumCovers, err := database.QueryAlbumCoverByAssetID(ctx, assetIDs)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode image: %w", err)
+		return searchResults{}, fmt.Errorf("unable to query album covers by asset ids: %w", err)
 	}
 
-	var buf bytes.Buffer
-	if err := jpeg.Encode(&buf, img, &jpeg.Options{Quality: quality}); err != nil {
-		return nil, fmt.Errorf("failed to encode image: %w", err)
+	sr := searchResults{Results: make([]result, 0, len(albumCovers))}
+	for _, b := range kBest {
+		if ac, ok := albumCovers[b.AssetId]; ok {
+			r := result{Score: b.Similarity, Type: AlbumCover, Content: ac}
+			sr.Results = append(sr.Results, r)
+		}
 	}
 
-	return buf.Bytes(), nil
+	return sr, nil
 }

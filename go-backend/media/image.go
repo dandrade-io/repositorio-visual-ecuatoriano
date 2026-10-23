@@ -1,9 +1,14 @@
 package media
 
 import (
+	"bytes"
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"image"
+	"image/jpeg"
+	_ "image/jpeg"
+	_ "image/png"
 	"io"
 	"net/http"
 )
@@ -21,6 +26,7 @@ func DetectMIME(r io.ReadSeeker) (string, error) {
 	return http.DetectContentType(buf[:n]), nil
 }
 
+// ToDataURI encodes r to Base64
 func ToDataURI(r io.ReadSeeker) (string, error) {
 	mimeType, err := DetectMIME(r)
 	if err != nil {
@@ -34,4 +40,18 @@ func ToDataURI(r io.ReadSeeker) (string, error) {
 
 	encoded := base64.StdEncoding.EncodeToString(data)
 	return fmt.Sprintf("data:%s;base64,%s", mimeType, encoded), nil
+}
+
+func CompressImg(r io.Reader, quality int) ([]byte, error) {
+	img, _, err := image.Decode(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode image: %w", err)
+	}
+
+	var buf bytes.Buffer
+	if err := jpeg.Encode(&buf, img, &jpeg.Options{Quality: quality}); err != nil {
+		return nil, fmt.Errorf("failed to encode image: %w", err)
+	}
+
+	return buf.Bytes(), nil
 }

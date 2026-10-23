@@ -10,7 +10,7 @@ export enum TitleSyntax {
 export const TITLE_SYNTAX_LABELS: Record<TitleSyntax, string> = {
   [TitleSyntax.Song]: 'La canción',
   [TitleSyntax.Image]: 'La imagen',
-  [TitleSyntax.Artist]: 'El artist',
+  [TitleSyntax.Artist]: 'El artista',
   [TitleSyntax.MusicKind]: 'El tipo de música',
   [TitleSyntax.Company]: 'La empresa',
   [TitleSyntax.Feeling]: 'El sentimiento',

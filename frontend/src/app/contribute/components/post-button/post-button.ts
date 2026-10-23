@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-post-button',
@@ -6,4 +6,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   templateUrl: './post-button.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PostButton {}
+export class PostButton {
+  disabled = input<boolean>(false);
+}

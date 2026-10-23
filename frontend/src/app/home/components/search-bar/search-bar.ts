@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, output, signal } from '@angular/core';
+import { Button } from '../../../shared/components/button/button';
 
 @Component({
   selector: 'search-bar',
-  imports: [],
+  imports: [Button],
   templateUrl: './search-bar.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

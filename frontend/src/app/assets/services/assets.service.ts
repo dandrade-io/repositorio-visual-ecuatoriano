@@ -1,46 +1,37 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable, tap } from 'rxjs';
-import {
-  AssetSearchApiResponse,
-  AsssetSearchResponse,
-} from '../interfaces/asset-search-response.interface';
-import { API_BASE_URL } from '../../shared/config/app.constants';
+import { AssetSearchParams, AssetSearchResponse } from '../interfaces/asset-search.interface';
+import { AssetResponse } from '../interfaces/asset-response.interface';
+import { EnvironmentConfigService } from '../../shared/services/environment-config.service';
+import { Asset } from '../interfaces/asset.interface';
+import { AssetMapper } from '../mappers/asset.mapper';
 
 export type AssetKind = 'image' | 'audio';
 export type EmbeddingModel = 'jina-clip-v2';
-
-export interface AssetSearchParams {
-  q: string;
-  kind: AssetKind;
-  model?: EmbeddingModel;
-  limit?: number;
-}
 
 @Injectable({
   providedIn: 'root',
 })
 export class AssetsService {
   private http = inject(HttpClient);
+  private env = inject(EnvironmentConfigService);
+  private apiUrl = this.env.get(EnvironmentConfigService.API_URL);
 
-  imageUrl(assetId: string | number): string {
-    return `${API_BASE_URL}/assets/image/${assetId}`;
+  upload(asset: File): Observable<Asset> {
+    const body = new FormData();
+    body.append('file', asset, asset.name);
+
+    return this.http
+      .post<AssetResponse>(`${this.apiUrl}/assets`, body)
+      .pipe(map(AssetMapper.fromResponse));
   }
 
-  search({ q, kind, model, limit }: AssetSearchParams): Observable<AsssetSearchResponse> {
+  search({ q, kind, model, limit }: AssetSearchParams): Observable<AssetSearchResponse> {
     let params = new HttpParams().set('q', q).set('kind', kind);
     if (model) params = params.set('model', model);
     if (limit !== undefined) params = params.set('limit', limit);
 
-    console.log({ q, kind, model, limit });
-
-    return this.http
-      .get<AssetSearchApiResponse>(`${API_BASE_URL}/assets/search`, { params })
-      .pipe(
-        tap((resp) => console.log(resp)),
-        map((resp) => ({
-          results: resp.results.map((r) => ({ assetId: r.asset_id, similarity: r.similarity })),
-        })),
-      );
+    return this.http.get<AssetSearchResponse>(`${this.apiUrl}/assets/search`, { params });
   }
 }

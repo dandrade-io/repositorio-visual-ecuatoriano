@@ -1,3 +1,7 @@
-<button class="bg-[#17362A] text-white px-15 py-2 rounded-[5px] hover:bg-[#17362A]/80">
+<button
+  [disabled]="disabled()"
+  type="submit"
+  class="bg-[#17362A] text-white px-15 py-2 rounded-[5px] hover:bg-[#17362A]/90 disabled:bg-[#17362A]/40 disabled:cursor-not-allowed"
+>
   Publicar
 </button>

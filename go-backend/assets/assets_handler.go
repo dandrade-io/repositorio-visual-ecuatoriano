@@ -6,8 +6,11 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+
 	"repository/database"
+	"repository/embedding"
 	"repository/files"
+	"repository/media"
 	transporthttp "repository/transport/http"
 	"strconv"
 	"strings"
@@ -15,11 +18,14 @@ import (
 )
 
 type Handler struct {
-	Service Service
+	Svc Service
 }
 
 func (h *Handler) Upload(w http.ResponseWriter, r *http.Request) error {
-	embed := true
+	claim, _ := transporthttp.ClaimsFrom(r.Context())
+	userID, _ := uuid.Parse(claim.Subject)
+
+	embed := false
 	if val, err := strconv.ParseBool(r.URL.Query().Get("embed")); err != nil {
 		embed = val
 	}
@@ -31,20 +37,19 @@ func (h *Handler) Upload(w http.ResponseWriter, r *http.Request) error {
 	}
 	defer info.file.Close()
 
-	asset, err := h.Service.Create(info.file, info.kind)
+	asset, err := h.Svc.Create(r.Context(), info.file, info.kind, userID)
 	if err != nil {
 		return &transporthttp.Error{Status: http.StatusInternalServerError, Msg: "unable to store asset", Cause: err}
 	}
 
 	if embed {
-		if err := h.Service.embed(r.Context(), asset, info.model); err != nil {
+		if err := h.Svc.embedAndSave(r.Context(), asset, info.model); err != nil {
 			return &transporthttp.Error{Status: http.StatusInternalServerError, Msg: "unable to embed asset", Cause: err}
 		}
 	}
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-
 	if err := json.NewEncoder(w).Encode(&assetResp{asset.ID, asset.Path}); err != nil {
 		return err
 	}
@@ -58,8 +63,8 @@ func (h *Handler) Embed(w http.ResponseWriter, r *http.Request) error {
 		return &transporthttp.Error{Status: http.StatusInternalServerError, Msg: err.Error()}
 	}
 
-	model, err := database.ParseModel(req.Model)
-	if err != nil {
+	model := embedding.Model(req.Model)
+	if !model.Valid() {
 		return &transporthttp.Error{Status: http.StatusBadRequest, Msg: "unknown model"}
 	}
 
@@ -68,7 +73,7 @@ func (h *Handler) Embed(w http.ResponseWriter, r *http.Request) error {
 		return &transporthttp.Error{Status: http.StatusBadRequest, Msg: "invalid asset id"}
 	}
 
-	if err := h.Service.EmbedByAssetID(r.Context(), id, model); err != nil {
+	if err := h.Svc.EmbedByAssetID(r.Context(), id, model); err != nil {
 		if errors.Is(err, database.ErrNotFound) {
 			return &transporthttp.Error{Status: http.StatusBadRequest, Msg: "invalid asset id", Cause: err}
 		}
@@ -96,7 +101,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) error {
 func (h *Handler) Search(w http.ResponseWriter, r *http.Request) error {
 	q := r.URL.Query().Get("q")
 	kind := r.URL.Query().Get("kind")
-	model := database.JinaClipV2
+	model := embedding.JinaClipV2
 	limit := 10
 
 	if strings.TrimSpace(q) == "" {
@@ -109,30 +114,22 @@ func (h *Handler) Search(w http.ResponseWriter, r *http.Request) error {
 		return &transporthttp.Error{Status: http.StatusBadRequest, Msg: "kind value must be \"image\" or \"audio\" "}
 	}
 	if name := strings.TrimSpace(r.URL.Query().Get("model")); name != "" {
-		val, err := database.ParseModel(name)
-		if err != nil {
+		model = embedding.Model(name)
+		if !model.Valid() {
 			return &transporthttp.Error{Status: http.StatusBadRequest, Msg: "unknown model provided"}
 		}
-		model = val
 	}
 	if num, err := strconv.Atoi(r.URL.Query().Get("limit")); err == nil {
 		limit = num
 	}
 
-	embeddings, err := h.Service.search(r.Context(), q, model, limit)
+	result, err := h.Svc.search(r.Context(), q, model, limit)
 	if err != nil {
-		return &transporthttp.Error{Status: http.StatusInternalServerError, Msg: "unable to search for k-best coincidences", Cause: err}
-	}
-
-	result := searchResp{Results: make([]searchResult, len(embeddings)), NumResults: len(embeddings)}
-	for i := range embeddings {
-		e := &embeddings[i]
-		result.Results[i] = searchResult{AssetId: e.AssetId, Similarity: e.Similarity}
+		return &transporthttp.Error{Status: http.StatusInternalServerError, Msg: "unable to search for k-best candidates", Cause: err}
 	}
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-
 	if err := json.NewEncoder(w).Encode(&result); err != nil {
 		return err
 	}
@@ -142,7 +139,7 @@ func (h *Handler) Search(w http.ResponseWriter, r *http.Request) error {
 
 type multipartInfo struct {
 	file  multipart.File
-	model database.Model
+	model embedding.Model
 	kind  string
 }
 
@@ -157,16 +154,16 @@ func parseMultipartFile(r *http.Request, embed bool) (multipartInfo, error) {
 		return multipartInfo{}, &transporthttp.Error{Status: http.StatusBadRequest, Msg: "only one asset must be provided"}
 	}
 
-	var model database.Model
+	var model embedding.Model
 	if embed {
 		if len(models) != 1 {
 			return multipartInfo{}, &transporthttp.Error{Status: http.StatusBadRequest, Msg: "only one model value must be provided"}
 		}
-		val, err := database.ParseModel(models[0])
-		if err != nil {
+
+		model = embedding.Model(models[0])
+		if !model.Valid() {
 			return multipartInfo{}, &transporthttp.Error{Status: http.StatusBadRequest, Msg: "unknown model provided"}
 		}
-		model = val
 	}
 
 	header := headers[0]
@@ -175,7 +172,7 @@ func parseMultipartFile(r *http.Request, embed bool) (multipartInfo, error) {
 		return multipartInfo{}, &transporthttp.Error{Status: http.StatusBadRequest, Msg: "unable to process file", Cause: err}
 	}
 
-	mime, err := mimeType(file)
+	mime, err := media.DetectMIME(file)
 	if err != nil {
 		file.Close()
 		return multipartInfo{}, &transporthttp.Error{Status: http.StatusBadRequest, Msg: "unable to process file", Cause: err}

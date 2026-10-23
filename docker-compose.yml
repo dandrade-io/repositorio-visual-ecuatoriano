@@ -41,14 +41,14 @@ services:
 
   db:
     image: pgvector/pgvector:pg18
-    container_name: repo-db
+    container_name: db
     env_file:
       - .env
     ports:
       - "${POSTGRES_PORT}:5432"
     volumes:
       - pgdata:/var/lib/postgresql
-      - ./db/init:/docker-entrypoint-initdb.d
+      - ./setup/db/init:/docker-entrypoint-initdb.d
     networks:
       - private
     healthcheck:
@@ -56,6 +56,28 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.1
+    container_name: auth-keycloak
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://db:5432/keycloak
+      KC_DB_USERNAME: ${KC_DB_USERNAME}
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD}
+    ports:
+      - "8002:8080"
+    volumes:
+      - ./setup/keycloak/realms:/opt/keycloak/data/import:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - public
+      - private
 
 networks:
   public:

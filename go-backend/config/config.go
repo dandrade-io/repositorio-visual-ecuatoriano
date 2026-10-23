@@ -8,16 +8,21 @@ import (
 )
 
 var (
-	DBUser          string
-	DBPassword      string
-	DBHost          string
-	DBPort          string
-	DBName          string
+	DBUser     string
+	DBPassword string
+	DBHost     string
+	DBPort     string
+	DBName     string
+
 	EmbedServiceURL string
 	PublicBaseURL   string
-	LLMBaseUrl      string
-	LLMApiKey       string
-	LLMModel        string
+
+	LLMBaseUrl string
+	LLMApiKey  string
+	LLMModel   string
+
+	KCBaseURL string
+	KCRealm   string
 )
 
 func init() {
@@ -27,8 +32,6 @@ func init() {
 	}
 
 	envPath := filepath.Join(filepath.Dir(wd), ".env")
-
-	// Optional: in containers the variables come from the environment.
 	_ = godotenv.Load(envPath)
 
 	DBUser = os.Getenv("POSTGRES_USER")
@@ -41,4 +44,6 @@ func init() {
 	LLMBaseUrl = os.Getenv("LLM_BASE_URL")
 	LLMApiKey = os.Getenv("LLM_API_KEY")
 	LLMModel = os.Getenv("LLM_NAME")
+	KCBaseURL = os.Getenv("KC_BASE_URL")
+	KCRealm = os.Getenv("KC_REALM")
 }

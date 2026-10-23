@@ -1,0 +1,7 @@
+<ul class="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
+  @for (artwork of artworks(); track artwork.id) {
+    <app-artwork-card [artwork]="artwork" />
+  } @empty {
+    <li class="col-span-full text-center text-sm text-gray-500">No se encontraron resultados.</li>
+  }
+</ul>

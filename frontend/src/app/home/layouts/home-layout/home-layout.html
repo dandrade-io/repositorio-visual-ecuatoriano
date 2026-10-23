@@ -1,18 +1,29 @@
-<main class="mx-auto w-full max-w-6xl px-4 py-8">
+<main class="mx-auto min-h-screen min-w-screen px-[12vw] py-8 bg-[#F8F8FD]">
+  <div class="flex justify-end h-11">
+    @if (auth.authenticated()) {
+      <app-button (click)="goToRegisterAlbumCoverPage()" color="#3D9970" class="cursor-pointer">
+        <div class="flex items-center"><app-square-plus class="mr-1" /> Contribuir</div>
+      </app-button>
+      <div class="w-4"></div>
+      <app-profile-menu />
+    } @else {
+      <app-button (click)="register()" color="#DBDBDB" class="cursor-pointer"
+        >Registrarse</app-button
+      >
+      <div class="w-3"></div>
+      <app-button (click)="login()" color="#155dfc" class="cursor-pointer"
+        >Iniciar sesión</app-button
+      >
+    }
+  </div>
+
+  <div class="h-8"></div>
+
   <search-bar (search)="onSearch($event)" />
 
-  @if (assetsResource.error()) {
+  @if (artworksResource.error()) {
     <p class="mt-8 text-center text-sm text-gray-500">Ocurrió un error al buscar.</p>
-  } @else if (assetsResource.hasValue()) {
-    <ul class="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-      @for (result of assetsResource.value().results; track result.assetId) {
-        <li class="aspect-square overflow-hidden rounded-xl border border-black/10 bg-gray-50">
-          <img [src]="imageUrl(result.assetId)" alt="" loading="lazy"
-            class="h-full w-full object-cover transition-transform duration-300 hover:scale-105" />
-        </li>
-      } @empty {
-        <li class="col-span-full text-center text-sm text-gray-500">No se encontraron resultados.</li>
-      }
-    </ul>
+  } @else if (artworksResource.hasValue()) {
+    <app-artwork-grid [artworks]="artworksResource.value()" />
   }
 </main>

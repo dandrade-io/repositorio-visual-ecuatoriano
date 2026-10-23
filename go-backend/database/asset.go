@@ -9,19 +9,40 @@ import (
 )
 
 type Asset struct {
-	ID   uuid.UUID
-	Path string
-	Kind string
+	ID         uuid.UUID
+	Path       string
+	Kind       string
+	UploadedBy uuid.UUID
 }
 
-func CreateAsset(a Asset) error {
-	_, err := db.Exec("INSERT INTO asset (id, path, kind) VALUES($1, $2, $3)", a.ID, a.Path, a.Kind)
+func createAssetQuery(a Asset) (string, []any) {
+	return "INSERT INTO asset (id, path, kind, uploaded_by) VALUES($1, $2, $3, $4)", []any{a.ID, a.Path, a.Kind, a.UploadedBy}
+}
 
-	if err != nil {
-		return err
-	}
+func InsertAsset(ctx context.Context, a Asset) error {
+	q, args := createAssetQuery(a)
+	_, err := db.ExecContext(ctx, q, args...)
 
-	return nil
+	return err
+}
+
+func InsertAssetTx(ctx context.Context, tx *sql.Tx, a Asset) error {
+	q, args := createAssetQuery(a)
+	_, err := tx.ExecContext(ctx, q, args...)
+
+	return err
+}
+
+// ClaimAssetTx sets asset's pending field to True
+func ClaimAssetTx(ctx context.Context, tx *sql.Tx, assetID uuid.UUID, userID uuid.UUID) error {
+	_, err := tx.ExecContext(
+		ctx,
+		`UPDATE asset SET pending = false
+		WHERE id = $1 AND uploaded_by = $2 AND pending`,
+		assetID, userID,
+	)
+
+	return err
 }
 
 func GetAssetByID(ctx context.Context, id uuid.UUID) (Asset, error) {

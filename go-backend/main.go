@@ -10,8 +10,11 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"repository/albumcover"
 	"repository/assets"
-	"repository/assets/albumcover"
+	"repository/embedding"
+	"uuid"
+
 	"repository/database"
 	transporthttp "repository/transport/http"
 	"sync"
@@ -25,21 +28,27 @@ func main() {
 	}
 
 	assetsService := assets.Service{}
-	assetsHandler := assets.Handler{Service: assetsService}
+	assetsHandler := assets.Handler{Svc: assetsService}
 	albumcoverHandler := albumcover.Handler{}
 
-	mux := http.NewServeMux()
+	auth := transporthttp.AuthMiddleware
+	ensureUser := transporthttp.EnsureUser()
+	chain := transporthttp.Chain
 
+	mux := http.NewServeMux()
 	mux.Handle("GET /api/v1/assets/search", transporthttp.AppHandler(assetsHandler.Search))
 	mux.Handle("GET /api/v1/assets/{path...}", transporthttp.AppHandler(assetsHandler.Get))
-	mux.Handle("POST /api/v1/assets", transporthttp.AppHandler(assetsHandler.Upload))
+	mux.Handle("POST /api/v1/assets", chain(transporthttp.AppHandler(assetsHandler.Upload), auth, ensureUser))
 	mux.Handle("POST /api/v1/assets/{id}/embeddings", transporthttp.AppHandler(assetsHandler.Embed))
+	mux.Handle("POST /api/v1/assets/{id}/metadata/album-cover", transporthttp.AppHandler(albumcoverHandler.MetadataFromAsset))
 
-	mux.Handle("POST /api/v1/metadata/album-cover", transporthttp.AppHandler(albumcoverHandler.Metadata))
+	mux.Handle("GET /api/v1/album-cover", transporthttp.AppHandler(albumcoverHandler.Get))
+	mux.Handle("POST /api/v1/album-cover", chain(transporthttp.AppHandler(albumcoverHandler.Upload), auth, ensureUser))
+	mux.Handle("POST /api/v1/metadata/album-cover", transporthttp.AppHandler(albumcoverHandler.MetadataFromUpload))
 
 	server := &http.Server{
 		Addr:    ":8080",
-		Handler: loggerMiddleware(mux),
+		Handler: transporthttp.LoggerMiddleware(mux),
 	}
 
 	go func() {
@@ -48,10 +57,10 @@ func main() {
 			slog.Error("Server forced to shutdown due to error.", "error", err)
 		}
 	}()
-	go func() {
-		// time.Sleep(5 * time.Second)
-		// ingestInitialData()
-	}()
+	// go func() {
+	// time.Sleep(5 * time.Second)
+	// ingestInitialData()
+	// }()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
@@ -78,31 +87,9 @@ func main() {
 	slog.Info("Application fully terminated.")
 }
 
-type respWriter struct {
-	http.ResponseWriter
-	statusCode int
-	written    bool
-}
-
-func (rw *respWriter) WriteHeader(code int) {
-	if rw.written {
-		return // ignore — header already sent, avoid the superfluous-call log
-	}
-	rw.written = true
-	rw.statusCode = code
-	rw.ResponseWriter.WriteHeader(code)
-}
-
-func loggerMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		wrapped := &respWriter{ResponseWriter: w, statusCode: http.StatusOK}
-		next.ServeHTTP(wrapped, r)
-		slog.Info("HTTP Request", "method", r.Method, "path", r.URL.Path, "status", wrapped.statusCode)
-	})
-}
-
 func ingestInitialData() {
 	slog.Info("Ingest Initial Data: Starting...")
+	userID := uuid.NewV7()
 
 	wd, err := os.Getwd()
 	if err != nil {
@@ -131,7 +118,7 @@ func ingestInitialData() {
 		}
 
 		wg.Go(func() {
-			if err := service.Ingest(context.Background(), file, "image", database.JinaClipV2); err != nil {
+			if err := service.Ingest(context.Background(), file, "image", embedding.JinaClipV2, userID); err != nil {
 				slog.Error("Ingest Initial Data: failed to ingest asset", "path", p, "error", err)
 			}
 		})

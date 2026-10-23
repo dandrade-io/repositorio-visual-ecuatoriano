@@ -16,7 +16,7 @@ func init() {
 		panic(err)
 	}
 
-	base = filepath.Join(filepath.Dir(wd), "assets-storage")
+	base = filepath.Join(wd, "assets-storage")
 	if err := os.MkdirAll(base, 0755); err != nil {
 		panic(err)
 	}

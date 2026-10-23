@@ -1,16 +1,17 @@
 package assets
 
-import (
-	"errors"
-	"io"
-	"net/http"
+type AssetType string
+
+const (
+	AlbumCover AssetType = "album-cover"
 )
 
-func mimeType(file io.Reader) (string, error) {
-	buf := make([]byte, 512)
-	if _, err := file.Read(buf); err != nil && !errors.Is(err, io.EOF) {
-		return "", err
-	}
+type searchResults struct {
+	Results []result `json:"results"`
+}
 
-	return http.DetectContentType(buf), nil
+type result struct {
+	Score   float32   `json:"score"`
+	Type    AssetType `json:"type"`
+	Content any       `json:"content"`
 }
