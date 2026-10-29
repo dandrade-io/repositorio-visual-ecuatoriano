@@ -22,6 +22,7 @@ export class AlbumCoverMapper {
   static fromResponse(response: AlbumCoverResponse): AlbumCover {
     return {
       id: response.id,
+      path: response.path,
       ...AlbumCoverMapper.fromMetadataResponse(response),
     };
   }

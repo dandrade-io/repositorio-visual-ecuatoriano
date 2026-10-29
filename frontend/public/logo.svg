@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 972 990" fill="none" role="img" aria-labelledby="logo-title">
+  <title id="logo-title">Logo</title>
+  <style>
+    /* ── Variables editables desde tu CSS ─────────────────────────────
+       --logo-orange  naranja principal (el globo se oscurece solo)
+       --logo-navy    líneas del edificio
+       --logo-dark    contornos de los monumentos y ventanas
+       --logo-gray    marco superior
+    ─────────────────────────────────────────────────────────────────── */
+    .o  { fill: var(--logo-orange, #C8704A); }
+    .og { fill: #B0623D; fill: color-mix(in srgb, var(--logo-orange, #C8704A) 82%, #000); }
+    .k  { fill: var(--logo-dark, #1A1A1A); }
+    .kl { stroke: var(--logo-dark, #1A1A1A); stroke-width: 5.5; stroke-linejoin: round; stroke-linecap: round; }
+    .kt { stroke: var(--logo-dark, #1A1A1A); stroke-width: 4; stroke-linecap: round; }
+    .g  { stroke: var(--logo-gray, #8A8580); stroke-width: 6; stroke-linecap: round; }
+    .n  { stroke: var(--logo-navy, #1B2452); stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
+    .m  { stroke-width: 7; }
+    .t  { stroke-width: 5.5; }
+  </style>
+
+  <defs>
+    <!-- Monumento izquierdo (el derecho es su espejo) -->
+    <g id="monument">
+      <path class="o kl" d="M213 291 H338 L349 549 H204 Z"/>
+      <rect class="o kl" x="134" y="549" width="214" height="24"/>
+      <rect class="o kl" x="250" y="376" width="50" height="119"/>
+      <rect class="o kl" x="232" y="268" width="86" height="23"/>
+      <circle class="og kl" cx="275" cy="210" r="42"/>
+      <ellipse class="kt" cx="275" cy="210" rx="17" ry="42"/>
+      <path class="kt" d="M233 210 H317"/>
+    </g>
+
+    <!-- Ala izquierda del edificio (la derecha es su espejo) -->
+    <g id="wing">
+      <rect class="o" x="58" y="584" width="279" height="26"/>
+      <g class="k">
+        <rect x="127.5" y="701" width="36" height="64"/>
+        <rect x="227.5" y="701" width="36" height="64"/>
+      </g>
+      <g class="o n m">
+        <path d="M111.5 948 V852 A34 34 0 0 1 179.5 852 V948 Z"/>
+        <path d="M211.5 948 V852 A34 34 0 0 1 279.5 852 V948 Z"/>
+      </g>
+    </g>
+  </defs>
+
+  <!-- Marco superior (abierto sobre la bandera) -->
+  <path class="g" d="M440 122 H98 Q54 122 54 166 V575"/>
+  <path class="g" d="M590 122 H875 Q919 122 919 166 V575"/>
+
+  <!-- Monumentos -->
+  <use xlink:href="#monument" href="#monument" transform="translate(-20 0)"/>
+  <use xlink:href="#monument" href="#monument" transform="translate(993 0) scale(-1 1)"/>
+
+  <!-- Bandera ondulada -->
+  <path class="n" d="M486.5 152 V66"/>
+  <path class="o" d="M488 78 C500 64 510 64 522 77 S546 90 557 77 C553 93 561 109 556 125 C545 138 533 138 522 125 S499 112 488 128 Z"/>
+  <path class="n m" d="M488 78 C500 64 510 64 522 77 S546 90 557 77 C553 93 561 109 556 125 C545 138 533 138 522 125 S499 112 488 128 Z"/>
+
+  <!-- Torre -->
+  <path class="n m" d="M465 182 C465 150 508 150 508 182"/>
+  <path class="n m" d="M456 182 H517 M461 182 V224 M512 182 V224"/>
+  <path class="n m" d="M412 298 C412 250 446 224 486.5 224 C527 224 561 250 561 298"/>
+  <path class="n t" d="M486.5 224 C466 238 456 268 456 298 M486.5 224 C507 238 517 268 517 298"/>
+  <path class="n m" d="M410 298 H563"/>
+  <path class="n" d="M390 321 H583"/>
+  <path class="n m" d="M407 321 V456 M566 321 V456"/>
+  <circle class="n m" cx="486.5" cy="387" r="37"/>
+  <path class="n m" d="M486.5 363 V389 L499 399"/>
+  <path class="n" d="M382 456 H591"/>
+  <path class="n" d="M395 456 V554 M578 456 V554"/>
+  <path class="o" d="M468.5 510 V488 A18 18 0 0 1 504.5 488 V510 Z"/>
+
+  <!-- Alas -->
+  <use xlink:href="#wing" href="#wing"/>
+  <use xlink:href="#wing" href="#wing" transform="translate(973 0) scale(-1 1)"/>
+
+  <!-- Pabellón central: frontón, pilastras, dos ventanas y dos puertas -->
+  <path class="n" d="M337 575 L486.5 520 L636 575"/>
+  <path class="n" d="M337 575 V950 M636 575 V950"/>
+  <path class="n" d="M54 617 H919 M54 765 H919"/>
+  <g class="k">
+    <path d="M419 765 V694 A17.5 17.5 0 0 1 454 694 V765 Z"/>
+    <path d="M519 765 V694 A17.5 17.5 0 0 1 554 694 V765 Z"/>
+  </g>
+  <g class="o n m">
+    <path d="M402.5 948 V852 A34 34 0 0 1 470.5 852 V948 Z"/>
+    <path d="M502.5 948 V852 A34 34 0 0 1 570.5 852 V948 Z"/>
+  </g>
+
+  <!-- Contorno exterior del edificio -->
+  <path class="n" d="M54 575 H919 V915 Q919 950 884 950 H89 Q54 950 54 915 Z"/>
+</svg>

@@ -1,5 +1,8 @@
 <li class="group">
-  <div class="relative aspect-square overflow-hidden rounded-xl border border-black/10 bg-gray-50">
+  <div
+    (click)="navigateToDetailsPage()"
+    class="cursor-pointer relative aspect-square overflow-hidden rounded-md border border-black/10 bg-gray-50 (click)=()"
+  >
     <img
       [src]="imageUrl()"
       [alt]="artwork().title ?? 'Portada de álbum'"

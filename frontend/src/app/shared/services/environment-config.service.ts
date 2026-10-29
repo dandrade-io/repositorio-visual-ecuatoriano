@@ -1,10 +1,10 @@
 import { HttpBackend, HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 
 export type Env = Record<string, string>;
 
-@Injectable({ providedIn: 'root' })
+@Service()
 export class EnvironmentConfigService {
   private http = new HttpClient(inject(HttpBackend));
   private env: Record<string, string> = {};

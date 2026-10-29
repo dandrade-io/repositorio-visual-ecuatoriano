@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 
 export interface ChipOption<T> {
   value: T;
@@ -9,7 +9,6 @@ export interface ChipOption<T> {
   selector: 'app-chip-item',
   imports: [],
   templateUrl: './chip-item.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChipItem<T> {
   option = input.required<ChipOption<T>>();

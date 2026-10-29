@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { map, Observable, tap } from 'rxjs';
+import { inject, Service } from '@angular/core';
+import { map, Observable } from 'rxjs';
 import { AssetSearchParams, AssetSearchResponse } from '../interfaces/asset-search.interface';
 import { AssetResponse } from '../interfaces/asset-response.interface';
 import { EnvironmentConfigService } from '../../shared/services/environment-config.service';
@@ -10,9 +10,7 @@ import { AssetMapper } from '../mappers/asset.mapper';
 export type AssetKind = 'image' | 'audio';
 export type EmbeddingModel = 'jina-clip-v2';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Service()
 export class AssetsService {
   private http = inject(HttpClient);
   private env = inject(EnvironmentConfigService);
@@ -33,5 +31,9 @@ export class AssetsService {
     if (limit !== undefined) params = params.set('limit', limit);
 
     return this.http.get<AssetSearchResponse>(`${this.apiUrl}/assets/search`, { params });
+  }
+
+  getAssetUrl(path: string): string {
+    return `${this.apiUrl}/assets/${path}`;
   }
 }

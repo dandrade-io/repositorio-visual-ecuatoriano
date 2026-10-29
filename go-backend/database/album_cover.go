@@ -37,6 +37,28 @@ type AlbumCoverSummary struct {
 	Path        string    `json:"path"`
 }
 
+func QueryAlbumCoverById(ctx context.Context, id uuid.UUID) (AlbumCoverAsset, error) {
+	var aca AlbumCoverAsset
+
+	err := db.QueryRowContext(ctx,
+		`SELECT DISTINCT
+			ac.id, ac.title, ac.year, ac.artist, ac.rhythms, ac.representation_technique, ac.predominance,
+		 	ac.colors, ac.title_syntax, ac.published_by, asset.path
+		FROM album_cover ac
+		INNER JOIN album_cover_asset aca ON aca.album_cover_id = ac.id
+		INNER JOIN asset ON aca.asset_id = asset.id
+		WHERE ac.id = $1`, id,
+	).Scan(&aca.ID, &aca.Title, &aca.Year, &aca.Artist, typeMap.SQLScanner(&aca.Rhythms), &aca.ReprTechnique,
+		&aca.Predominance, typeMap.SQLScanner(&aca.Colors), &aca.TitleSyntax, &aca.PublishedBy, &aca.Path,
+	)
+
+	if err != nil {
+		return AlbumCoverAsset{}, err
+	}
+
+	return aca, nil
+}
+
 func QueryAlbumCoverSummary(ctx context.Context, limit int) ([]AlbumCoverSummary, error) {
 	if limit <= 0 {
 		return nil, fmt.Errorf("limit should be greater than 0")

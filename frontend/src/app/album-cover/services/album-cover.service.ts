@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import { AlbumCoverMetadata, AlbumCoverMetadataResponse } from '../interfaces/album-cover-metadata';
 import { map, Observable } from 'rxjs';
 import { AlbumCoverMapper } from '../mappers/album-cover.mapper';
@@ -7,7 +7,7 @@ import { EnvironmentConfigService } from '../../shared/services/environment-conf
 import { AlbumCover, AlbumCoverResponse } from '../interfaces/album-cover.interface';
 import { AlbumCoverSummaryResponse } from '../interfaces/album-cover-summary.interface';
 
-@Injectable({ providedIn: 'root' })
+@Service()
 export class AlbumCoverService {
   private http = inject(HttpClient);
   private env = inject(EnvironmentConfigService);
@@ -15,6 +15,12 @@ export class AlbumCoverService {
 
   fetchSummary(): Observable<AlbumCoverSummaryResponse> {
     return this.http.get<AlbumCoverSummaryResponse>(`${this.apiUrl}/album-cover`);
+  }
+
+  fetchById(id: string): Observable<AlbumCover> {
+    return this.http
+      .get<AlbumCoverResponse>(`${this.apiUrl}/album-cover/${id}`)
+      .pipe(map(AlbumCoverMapper.fromResponse));
   }
 
   extractMetadata(assetId: string): Observable<AlbumCoverMetadata> {

@@ -45,6 +45,26 @@ func (r uploadReq) toInput(userID uuid.UUID) CreateInput {
 	}
 }
 
+func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) error {
+	id, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		return &transporthttp.Error{Status: http.StatusBadRequest, Msg: "invalid album-cover id"}
+	}
+
+	aca, err := database.QueryAlbumCoverById(r.Context(), id)
+	if err != nil {
+		return &transporthttp.Error{Status: http.StatusBadRequest, Msg: "failed to query album-cover", Cause: err}
+	}
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(&aca); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) error {
 	type resp struct {
 		Results []database.AlbumCoverSummary `json:"results"`

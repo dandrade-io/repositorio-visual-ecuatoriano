@@ -4,11 +4,12 @@ import {
   inject,
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
+  provideZonelessChangeDetection,
 } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
 
 import { routes } from './app.routes';
-import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { EnvironmentConfigService } from './shared/services/environment-config.service';
 import Keycloak from 'keycloak-js';
 import { firstValueFrom } from 'rxjs';
@@ -17,9 +18,10 @@ import { bearerInterceptor } from './auth/interceptors/bearer.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideZonelessChangeDetection(),
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes),
-    provideHttpClient(withFetch(), withInterceptors([bearerInterceptor])),
+    provideRouter(routes, withComponentInputBinding()),
+    provideHttpClient(withInterceptors([bearerInterceptor])),
     {
       provide: Keycloak,
       useFactory: () => {

@@ -39,12 +39,6 @@ func AskWithJsonSchema[T any](
 		return zero, fmt.Errorf("unmarshal error: %w", err)
 	}
 
-	// pretty, err := json.MarshalIndent(schema, "", "  ")
-	// if err != nil {
-	// 	return zero, err
-	// }
-	// fmt.Println(string(pretty))
-
 	completion, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
 		Model: config.LLMModel,
 		Messages: []openai.ChatCompletionMessageParamUnion{

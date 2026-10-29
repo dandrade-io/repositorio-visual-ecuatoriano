@@ -42,6 +42,7 @@ func main() {
 	mux.Handle("POST /api/v1/assets/{id}/embeddings", transporthttp.AppHandler(assetsHandler.Embed))
 	mux.Handle("POST /api/v1/assets/{id}/metadata/album-cover", transporthttp.AppHandler(albumcoverHandler.MetadataFromAsset))
 
+	mux.Handle("GET /api/v1/album-cover/{id}", transporthttp.AppHandler(albumcoverHandler.GetByID))
 	mux.Handle("GET /api/v1/album-cover", transporthttp.AppHandler(albumcoverHandler.Get))
 	mux.Handle("POST /api/v1/album-cover", chain(transporthttp.AppHandler(albumcoverHandler.Upload), auth, ensureUser))
 	mux.Handle("POST /api/v1/metadata/album-cover", transporthttp.AppHandler(albumcoverHandler.MetadataFromUpload))
@@ -58,8 +59,8 @@ func main() {
 		}
 	}()
 	// go func() {
-	// time.Sleep(5 * time.Second)
-	// ingestInitialData()
+	// 	time.Sleep(5 * time.Second)
+	// 	ingestInitialData()
 	// }()
 
 	quit := make(chan os.Signal, 1)
@@ -89,7 +90,7 @@ func main() {
 
 func ingestInitialData() {
 	slog.Info("Ingest Initial Data: Starting...")
-	userID := uuid.NewV7()
+	userID := uuid.MustParse("bcf3ebc7-b52c-4b95-8517-e967f8d2cd6f")
 
 	wd, err := os.Getwd()
 	if err != nil {

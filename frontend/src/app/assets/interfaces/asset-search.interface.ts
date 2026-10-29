@@ -1,3 +1,4 @@
+import { ArtworkType } from '../../artwork/interfaces/artwork-base.interface';
 import { AssetKind, EmbeddingModel } from '../services/assets.service';
 
 export interface AssetSearchParams {
@@ -13,7 +14,7 @@ export interface AssetSearchResponse {
 
 export interface Result {
   score: number;
-  type: string;
+  type: ArtworkType;
   content: Content;
 }
 

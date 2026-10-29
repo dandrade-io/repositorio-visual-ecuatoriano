@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { SearchBar } from '../../components/search-bar/search-bar';
 import { AssetsService } from '../../../assets/services/assets.service';
 import { rxResource } from '@angular/core/rxjs-interop';
@@ -8,15 +8,12 @@ import { map } from 'rxjs';
 import { ArtworkMapper } from '../../../artwork/components/mappers/artwork.mapper';
 import { ArtworkGrid } from '../../../artwork/components/artwork-grid/artwork-grid';
 import { AlbumCoverService } from '../../../album-cover/services/album-cover.service';
-import { Button } from '../../../shared/components/button/button';
-import { SquarePlus } from '../../../shared/icons/square-plus/square-plus';
-import { ProfileMenu } from '../../../shared/components/profile-menu/profile-menu';
+import { Header } from '../../../shared/components/header/header';
 
 @Component({
   selector: 'app-home-layout',
-  imports: [SearchBar, ArtworkGrid, Button, SquarePlus, ProfileMenu],
+  imports: [SearchBar, ArtworkGrid, Header],
   templateUrl: './home-layout.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomeLayout {
   private router = inject(Router);

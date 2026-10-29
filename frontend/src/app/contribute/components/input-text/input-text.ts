@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, forwardRef, input, signal } from '@angular/core';
+import { Component, forwardRef, input, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { InputLabel } from '../input-label/input-label';
 
@@ -6,7 +6,7 @@ import { InputLabel } from '../input-label/input-label';
   selector: 'input-text',
   imports: [InputLabel],
   templateUrl: './input-text.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   providers: [
     { provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => InputText), multi: true },
   ],

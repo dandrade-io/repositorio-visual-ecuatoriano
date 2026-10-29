@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, forwardRef, input, signal } from '@angular/core';
+import { Component, forwardRef, input, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { ChipItem, ChipOption } from '../chip-item/chip-item';
 import { InputLabel } from '../input-label/input-label';
@@ -7,7 +7,7 @@ import { InputLabel } from '../input-label/input-label';
   selector: 'app-chip-group',
   imports: [ChipItem, InputLabel],
   templateUrl: './chip-group.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+
   providers: [
     { provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => ChipGroup), multi: true },
   ],

@@ -110,10 +110,16 @@ func (s *Service) search(ctx context.Context, query string, m embedding.Model, l
 
 	sr := searchResults{Results: make([]result, 0, len(albumCovers))}
 	for _, b := range kBest {
+		r := result{Score: b.Similarity, Type: Assets}
+
 		if ac, ok := albumCovers[b.AssetId]; ok {
-			r := result{Score: b.Similarity, Type: AlbumCover, Content: ac}
-			sr.Results = append(sr.Results, r)
+			r.Content = ac
+			r.Type = AlbumCover
+		} else {
+			r.Content = map[string]any{"path": "image/" + b.AssetId.String()}
 		}
+
+		sr.Results = append(sr.Results, r)
 	}
 
 	return sr, nil

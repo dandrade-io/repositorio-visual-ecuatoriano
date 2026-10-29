@@ -1,12 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  inject,
-  signal,
-  Signal,
-} from '@angular/core';
+import { Component, computed, effect, inject, signal, Signal } from '@angular/core';
 import { AbstractControl, NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { InputText } from '../../../contribute/components/input-text/input-text';
 import { Container } from '../../../contribute/components/container/container';
@@ -50,7 +42,6 @@ type VerifiableField = (typeof VERIFIABLE_FIELDS)[number];
     VerifyButton,
   ],
   templateUrl: './register-album-cover-page.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RegisterAlbumCoverPage {
   private router = inject(Router);

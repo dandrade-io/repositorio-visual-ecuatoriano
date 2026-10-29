@@ -7,3 +7,18 @@
     cursor: default;
   }
 }
+
+@theme {
+  --animate-dot-wave: dot-wave 1.2s ease-in-out infinite;
+
+  @keyframes dot-wave {
+    0%, 60%, 100% {
+      transform: translateY(0);
+      opacity: 0.5;
+    }
+    30% {
+      transform: translateY(-60%);
+      opacity: 1;
+    }
+  }
+}

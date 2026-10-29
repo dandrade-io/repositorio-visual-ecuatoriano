@@ -1,4 +1,4 @@
-import { computed, effect, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Service, signal } from '@angular/core';
 import {
   KEYCLOAK_EVENT_SIGNAL,
   KeycloakEventType,
@@ -10,7 +10,7 @@ import Keycloak from 'keycloak-js';
 export type VerifierRole = 'expert_verifier' | 'ordinary_verifier';
 const VERIFIER_ROLES: VerifierRole[] = ['expert_verifier', 'ordinary_verifier'];
 
-@Injectable({ providedIn: 'root' })
+@Service()
 export class AuthService {
   private keycloak = inject(Keycloak);
   private events = inject(KEYCLOAK_EVENT_SIGNAL);

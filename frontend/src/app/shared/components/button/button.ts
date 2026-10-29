@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from "@angular/core";
 
 export type ButtonVariant = 'solid' | 'outlined';
 
@@ -6,7 +6,6 @@ export type ButtonVariant = 'solid' | 'outlined';
   selector: 'app-button',
   imports: [],
   templateUrl: './button.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Button {
   type = input<string>('button');

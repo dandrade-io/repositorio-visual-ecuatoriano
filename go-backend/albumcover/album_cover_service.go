@@ -43,6 +43,10 @@ func (in *CreateInput) toAlbumCover() database.AlbumCover {
 	}
 }
 
+func (s *Service) GetByID(ctx context.Context, id uuid.UUID) (database.AlbumCoverAsset, error) {
+	return database.QueryAlbumCoverById(ctx, id)
+}
+
 func (s *Service) FetchSummary(ctx context.Context, limit int) ([]database.AlbumCoverSummary, error) {
 	return database.QueryAlbumCoverSummary(ctx, limit)
 }

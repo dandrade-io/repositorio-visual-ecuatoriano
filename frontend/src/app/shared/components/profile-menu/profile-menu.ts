@@ -1,7 +1,6 @@
 import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { AuthService, VerifierRole } from '../../../auth/services/auth.service';
-import { RouterLink } from '@angular/router';
 import Keycloak from 'keycloak-js';
 
 export interface RoleBadge {

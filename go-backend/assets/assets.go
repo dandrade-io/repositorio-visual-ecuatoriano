@@ -4,6 +4,7 @@ type AssetType string
 
 const (
 	AlbumCover AssetType = "album-cover"
+	Assets     AssetType = "assets"
 )
 
 type searchResults struct {

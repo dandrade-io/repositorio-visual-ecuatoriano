@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { ArtworkBase } from '../../interfaces/artwork-base.interface';
 import { EnvironmentConfigService } from '../../../shared/services/environment-config.service';
 import { DecimalPipe } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-artwork-card',
@@ -10,6 +11,8 @@ import { DecimalPipe } from '@angular/common';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ArtworkCard {
+  private router = inject(Router);
+
   protected readonly env = inject(EnvironmentConfigService);
 
   readonly artwork = input.required<ArtworkBase>();
@@ -20,4 +23,12 @@ export class ArtworkCard {
 
     return `${apiUrl}/assets/${artwork.imageUrl}`;
   });
+
+  protected navigateToDetailsPage() {
+    const artwork = this.artwork();
+
+    if (artwork.type === 'album-cover') {
+      this.router.navigate(['/artwork', artwork.type, artwork.id]);
+    }
+  }
 }

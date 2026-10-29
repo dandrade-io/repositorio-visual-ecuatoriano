@@ -14,6 +14,7 @@ export class ArtworkMapper {
       year: r.content.year,
       imageUrl: r.content.path,
       score: r.score,
+      type: r.type,
     }));
   }
 
@@ -29,6 +30,7 @@ export class ArtworkMapper {
       year: albumCover.year,
       imageUrl: albumCover.path,
       score: null,
+      type: 'album-cover',
     };
   }
 }

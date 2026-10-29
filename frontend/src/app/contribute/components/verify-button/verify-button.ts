@@ -1,11 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, input, model } from '@angular/core';
+import { Component, computed, input, model } from '@angular/core';
 import { VerifierRole } from '../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-verify-button',
   imports: [],
   templateUrl: './verify-button.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VerifyButton {
   readonly role = input<VerifierRole | null>(null);

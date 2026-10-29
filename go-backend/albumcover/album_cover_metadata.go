@@ -12,7 +12,7 @@ import (
 
 type Metadata struct {
 	Title          *string       `json:"title" jsonschema:"Album title exactly as printed on the cover, in its original language. Null if not legible."`
-	Year           *int          `json:"year" jsonschema:"Release year only if printed on the cover. Null otherwise."`
+	Year           *int          `json:"year" jsonschema:"Release year if printed on the cover. Otherwise, try infer the decade. If you feel very unsecure about it, set to Null."`
 	Artist         *string       `json:"artist" jsonschema:"Artist or group name as printed. Null if not legible."`
 	Rhythms        []string      `json:"rhythms" jsonschema:"Musical rhythms or genres, only if printed on the cover or clearly implied. Empty array if unknown."`
 	ReprTechnique  ReprTechnique `json:"representationTechnique"`

@@ -1,3 +1,5 @@
+export type ArtworkType = 'album-cover' | 'assets';
+
 export interface ArtworkBase {
   id: string;
   title: string | null;
@@ -5,4 +7,5 @@ export interface ArtworkBase {
   year?: number | null;
   imageUrl: string;
   score: number | null;
+  type: ArtworkType;
 }
