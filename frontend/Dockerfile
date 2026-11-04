@@ -22,16 +22,9 @@ RUN pnpm run build
 FROM nginxinc/nginx-unprivileged:${NGINX_VERSION} AS runner
 
 COPY nginx.conf /etc/nginx/nginx.conf
-
 COPY --chown=nginx:nginx --from=builder /app/dist/*/browser /usr/share/nginx/html
-
-COPY public/assets/env.template.json /usr/share/nginx/html/assets/env.template.json
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-# COPY --chmod=755 docker/40-runtime-config.sh /docker-entrypoint.d/40-runtime-config.sh
-
-USER nginx
+COPY --chown=nginx:nginx public/assets/env.template.json /usr/share/nginx/html/assets/env.template.json
+COPY --chmod=755 docker/entrypoint.sh /entrypoint.sh
 
 EXPOSE 8080
 

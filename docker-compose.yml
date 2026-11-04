@@ -4,6 +4,11 @@ services:
     profiles: ["app"]
     build:
       context: ./frontend
+    environment:
+      KC_URL: http://localhost:8002
+      KC_REALM: ${KC_REALM}
+      KC_CLIENT_ID: angular-client
+      API_URL: ${API_URL}
     ports:
       - "4200:8080"
 
@@ -12,21 +17,31 @@ services:
     profiles: ["app"]
     build:
       context: ./go-backend
-    env_file:
-      - .env
     environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_HOST: db
       POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${POSTGRES_DB}
       EMBED_SERVICE_BASE_URL: http://service:8001
+      BACKEND_BASE_URL: ${BACKEND_BASE_URL}
+      LLM_BASE_URL: ${LLM_BASE_URL}
+      LLM_API_KEY: ${LLM_API_KEY}
+      LLM_NAME: ${LLM_NAME}
+      KC_ISSUER_URL: ${KC_ISSUER_URL}
+      KC_BASE_URL: http://auth-keycloak:8080
+      KC_REALM: ${KC_REALM}
     ports:
       - "8080:8080"
     volumes:
-      - ./assets-storage:/assets-storage
+      - ./go-backend/assets-storage:/assets-storage
     networks:
       - public
       - private
     depends_on:
       db:
+        condition: service_healthy
+      keycloak:
         condition: service_healthy
 
   service:
@@ -42,10 +57,14 @@ services:
   db:
     image: pgvector/pgvector:pg18
     container_name: db
-    env_file:
-      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      KC_DB_USERNAME: ${KC_DB_USERNAME}
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD}
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql
       - ./setup/db/init:/docker-entrypoint-initdb.d
@@ -53,21 +72,24 @@ services:
       - private
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 5s
+      interval: 15s
       timeout: 5s
-      retries: 10
+      retries: 15
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.8.1
     container_name: auth-keycloak
     command: start-dev --import-realm
     environment:
+      KC_HOSTNAME: ${KC_BASE_URL}
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD}
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://db:5432/keycloak
       KC_DB_USERNAME: ${KC_DB_USERNAME}
       KC_DB_PASSWORD: ${KC_DB_PASSWORD}
+      KC_HEALTH_ENABLED: "true"
     ports:
       - "8002:8080"
     volumes:
@@ -78,6 +100,17 @@ services:
     networks:
       - public
       - private
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/9000 &&
+          echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 &&
+          grep -q '"status": "UP"' <&3
+      interval: 15s
+      timeout: 5s
+      retries: 15
+      start_period: 50s
 
 networks:
   public:

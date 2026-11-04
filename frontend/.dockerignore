@@ -28,6 +28,7 @@ playwright-report
 !*.env.production
 *.log
 *.tsbuildinfo
+**/env.json
 
 # ================================
 # IDE & OS-specific files

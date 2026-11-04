@@ -21,8 +21,9 @@ var (
 	LLMApiKey  string
 	LLMModel   string
 
-	KCBaseURL string
-	KCRealm   string
+	KCIssuerURL string
+	KCBaseURL   string
+	KCRealm     string
 )
 
 func init() {
@@ -39,11 +40,15 @@ func init() {
 	DBHost = os.Getenv("POSTGRES_HOST")
 	DBPort = os.Getenv("POSTGRES_PORT")
 	DBName = os.Getenv("POSTGRES_DB")
+
 	EmbedServiceURL = os.Getenv("EMBED_SERVICE_BASE_URL")
 	PublicBaseURL = os.Getenv("BACKEND_BASE_URL")
+
 	LLMBaseUrl = os.Getenv("LLM_BASE_URL")
 	LLMApiKey = os.Getenv("LLM_API_KEY")
 	LLMModel = os.Getenv("LLM_NAME")
+
+	KCIssuerURL = os.Getenv("KC_ISSUER_URL")
 	KCBaseURL = os.Getenv("KC_BASE_URL")
 	KCRealm = os.Getenv("KC_REALM")
 }

@@ -13,7 +13,9 @@ var AppClient = "backend-api"
 func init() {
 	ctx := context.Background()
 
-	provider, err := oidc.NewProvider(ctx, config.KCBaseURL+"/realms/"+config.KCRealm)
+	issuer := config.KCIssuerURL + "/realms/" + config.KCRealm
+	discovery := config.KCBaseURL + "/realms/" + config.KCRealm
+	provider, err := oidc.NewProvider(oidc.InsecureIssuerURLContext(ctx, issuer), discovery)
 	if err != nil {
 		panic(err)
 	}
