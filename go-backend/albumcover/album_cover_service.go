@@ -17,16 +17,18 @@ type Service struct {
 }
 
 type CreateInput struct {
-	Title         string
-	Year          *int
-	Artist        string
-	Rhythms       []string
-	ReprTechnique string
-	Predominance  string
-	Colors        []string
-	TitleSyntax   string
-	AssetID       uuid.UUID
-	PublishedBy   uuid.UUID
+	Title           string
+	Year            *int
+	Artist          string
+	Rhythms         []string
+	ReprTechnique   string
+	Predominance    string
+	Colors          []string
+	TitleSyntax     string
+	AssetID         uuid.UUID
+	PublishedBy     uuid.UUID
+	PublishedByRole string
+	VerifiedFields  map[database.AlbumCoverField]struct{}
 }
 
 func (in *CreateInput) toAlbumCover() database.AlbumCover {
@@ -43,7 +45,7 @@ func (in *CreateInput) toAlbumCover() database.AlbumCover {
 	}
 }
 
-func (s *Service) GetByID(ctx context.Context, id uuid.UUID) (database.AlbumCoverAsset, error) {
+func (s *Service) GetByID(ctx context.Context, id uuid.UUID) (database.AlbumCoverDetails, error) {
 	return database.QueryAlbumCoverById(ctx, id)
 }
 
@@ -78,6 +80,10 @@ func (s *Service) Create(ctx context.Context, in CreateInput) (database.AlbumCov
 
 		if err := database.InsertAlbumCoverAssetTx(ctx, tx, albumCover.ID, asset.ID); err != nil {
 			return fmt.Errorf("failed to insert album-cover-assset: %w", err)
+		}
+
+		if err := database.InsertAlbumCoverCheckTx(ctx, tx, in.VerifiedFields, albumCover.ID, in.PublishedBy, in.PublishedByRole); err != nil {
+			return fmt.Errorf("failed to insert album-cover-check: %w", err)
 		}
 
 		err = database.ClaimAssetTx(ctx, tx, asset.ID, in.PublishedBy)

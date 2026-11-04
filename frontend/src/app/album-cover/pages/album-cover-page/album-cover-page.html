@@ -29,29 +29,47 @@
 
         <div class="min-w-0 grow space-y-4">
           <div>
-            <h3
-              class="text-3xl font-medium"
-              [class.text-gray-900]="albumCover.title"
-              [class.italic]="!albumCover.title"
-              [class.text-gray-400]="!albumCover.title"
-            >
-              {{ albumCover.title ?? 'Título desconocido' }}
-            </h3>
-            <p
-              class="text-lg font-light"
-              [class.text-gray-600]="albumCover.artist"
-              [class.italic]="!albumCover.artist"
-              [class.text-gray-400]="!albumCover.artist"
-            >
-              {{ albumCover.artist ?? 'Artista desconocido' }}
-            </p>
+            <div class="flex flex-row items-center gap-3">
+              <h3
+                class="text-3xl font-medium"
+                [class.text-gray-900]="albumCover.title"
+                [class.italic]="!albumCover.title"
+                [class.text-gray-400]="!albumCover.title"
+              >
+                {{ albumCover.title ?? 'Título desconocido' }}
+              </h3>
+              @if (verifiedBy().title; as role) {
+                <app-verifier-icon [isExpert]="isExpert(role)" [showTooltip]="true" />
+              }
+            </div>
+
+            <div class="flex flex-row items-center gap-2">
+              <p
+                class="text-lg font-light"
+                [class.text-gray-600]="albumCover.artist"
+                [class.italic]="!albumCover.artist"
+                [class.text-gray-400]="!albumCover.artist"
+              >
+                {{ albumCover.artist ?? 'Artista desconocido' }}
+              </p>
+              @if (verifiedBy().artist; as role) {
+                <app-verifier-icon [isExpert]="isExpert(role)" [showTooltip]="true" />
+              }
+            </div>
           </div>
 
           <dl class="divide-y divide-gray-200">
             @for (item of items(); track item.label) {
               <div class="flex justify-between items-center gap-10 py-3">
                 <dt class="text-sm uppercase tracking-wide text-gray-500">{{ item.label }}</dt>
-                <dd class="text-lg font-light text-right text-gray-900">{{ item.value }}</dd>
+                <dd
+                  class="flex items-center justify-end gap-2 text-lg font-light text-right text-gray-900"
+                >
+                  {{ item.value }}
+                  @if (item.verifiedBy; as role) {
+                    <app-verifier-icon [isExpert]="isExpert(role)" [showTooltip]="true" />
+                  }
+                </dd>
               </div>
             }
           </dl>

@@ -2,7 +2,7 @@ import { Component, output, signal } from '@angular/core';
 import { Button } from '../../../shared/components/button/button';
 
 @Component({
-  selector: 'search-bar',
+  selector: 'app-search-bar',
   imports: [Button],
   templateUrl: './search-bar.html',
 })

@@ -10,6 +10,10 @@ import Keycloak from 'keycloak-js';
 export type VerifierRole = 'expert_verifier' | 'ordinary_verifier';
 const VERIFIER_ROLES: VerifierRole[] = ['expert_verifier', 'ordinary_verifier'];
 
+export function isVerifierRole(value: string): value is VerifierRole {
+  return (VERIFIER_ROLES as string[]).includes(value);
+}
+
 @Service()
 export class AuthService {
   private keycloak = inject(Keycloak);

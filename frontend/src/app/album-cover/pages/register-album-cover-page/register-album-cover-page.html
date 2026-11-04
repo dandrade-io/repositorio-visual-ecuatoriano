@@ -158,7 +158,7 @@
     <div class="flex flex-wrap items-end">
       <app-chip-group
         label="Predominancia gráfica"
-        formControlName="graphicPredominance"
+        formControlName="predominance"
         [options]="predominanceOptions()"
       />
 
@@ -174,9 +174,9 @@
       <app-verify-button
         class="ml-auto"
         [role]="authService.verifierRole()"
-        [disabled]="!hasValue().graphicPredominance"
-        [verified]="verified().graphicPredominance"
-        (verifiedChange)="setVerified('graphicPredominance', $event)"
+        [disabled]="!hasValue().predominance"
+        [verified]="verified().predominance"
+        (verifiedChange)="setVerified('predominance', $event)"
       />
     </div>
 

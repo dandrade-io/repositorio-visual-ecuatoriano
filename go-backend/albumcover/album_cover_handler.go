@@ -2,6 +2,7 @@ package albumcover
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -19,30 +20,43 @@ type Handler struct {
 }
 
 type uploadReq struct {
-	Title         string    `json:"title"`
-	Year          *int      `json:"year"`
-	Artist        string    `json:"artist"`
-	Rhythms       []string  `json:"rhythms"`
-	ReprTechnique string    `json:"representationTechnique"`
-	Predominance  string    `json:"graphicPredominance"`
-	Colors        []string  `json:"dominantColors"`
-	TitleSyntax   string    `json:"titleSyntax"`
-	AssetID       uuid.UUID `json:"assetId"`
+	Title          string    `json:"title"`
+	Year           *int      `json:"year"`
+	Artist         string    `json:"artist"`
+	Rhythms        []string  `json:"rhythms"`
+	ReprTechnique  string    `json:"representationTechnique"`
+	Predominance   string    `json:"graphicPredominance"`
+	Colors         []string  `json:"dominantColors"`
+	TitleSyntax    string    `json:"titleSyntax"`
+	VerifiedFields []string  `json:"verifiedFields"`
+	AssetID        uuid.UUID `json:"assetId"`
 }
 
-func (r uploadReq) toInput(userID uuid.UUID) CreateInput {
-	return CreateInput{
-		Title:         r.Title,
-		Year:          r.Year,
-		Artist:        r.Artist,
-		Rhythms:       r.Rhythms,
-		ReprTechnique: r.ReprTechnique,
-		Predominance:  r.Predominance,
-		Colors:        r.Colors,
-		TitleSyntax:   r.TitleSyntax,
-		AssetID:       r.AssetID,
-		PublishedBy:   userID,
+func (r uploadReq) toInput(userID uuid.UUID, userRole string) (CreateInput, error) {
+	verifiedFields := make(map[database.AlbumCoverField]struct{}, len(r.VerifiedFields))
+
+	for i := range r.VerifiedFields {
+		f := database.AlbumCoverField(r.VerifiedFields[i])
+		if !f.Valid() {
+			return CreateInput{}, fmt.Errorf("invalid field: %s", r.VerifiedFields[i])
+		}
+		verifiedFields[f] = struct{}{}
 	}
+
+	return CreateInput{
+		Title:           r.Title,
+		Year:            r.Year,
+		Artist:          r.Artist,
+		Rhythms:         r.Rhythms,
+		ReprTechnique:   r.ReprTechnique,
+		Predominance:    r.Predominance,
+		Colors:          r.Colors,
+		TitleSyntax:     r.TitleSyntax,
+		AssetID:         r.AssetID,
+		PublishedBy:     userID,
+		PublishedByRole: userRole,
+		VerifiedFields:  verifiedFields,
+	}, nil
 }
 
 func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) error {
@@ -101,7 +115,17 @@ func (h *Handler) Upload(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	ac, err := h.Svc.Create(r.Context(), req.toInput(userID))
+	role, err := claims.MainRole()
+	if err != nil {
+		return &transporthttp.Error{Status: http.StatusBadRequest, Msg: "The user has no assigned roles.", Cause: err}
+	}
+
+	in, err := req.toInput(userID, role)
+	if err != nil {
+		return err
+	}
+
+	ac, err := h.Svc.Create(r.Context(), in)
 	if err != nil {
 		return err
 	}

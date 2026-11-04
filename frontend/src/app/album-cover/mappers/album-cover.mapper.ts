@@ -1,9 +1,16 @@
+import { isVerifierRole } from '../../auth/services/auth.service';
 import { parseEnum } from '../../shared/parse-enum';
 import { Predominance } from '../enums/prodominance.enum';
 import { Technique } from '../enums/technique.enum';
 import { TitleSyntax } from '../enums/title-syntax.enum';
+import { isVerifiableField } from '../enums/verifiable_fields';
 import { AlbumCoverMetadata, AlbumCoverMetadataResponse } from '../interfaces/album-cover-metadata';
-import { AlbumCover, AlbumCoverResponse } from '../interfaces/album-cover.interface';
+import {
+  AlbumCover,
+  AlbumCoverCheck,
+  AlbumCoverCheckResponse,
+  AlbumCoverResponse,
+} from '../interfaces/album-cover.interface';
 
 export class AlbumCoverMapper {
   static fromMetadataResponse(response: AlbumCoverMetadataResponse): AlbumCoverMetadata {
@@ -13,7 +20,7 @@ export class AlbumCoverMapper {
       artist: response.artist,
       rhythms: response.rhythms,
       representationTechnique: parseEnum(Technique, response.representationTechnique),
-      graphicPredominance: parseEnum(Predominance, response.graphicPredominance),
+      predominance: parseEnum(Predominance, response.predominance),
       dominantColors: response.dominantColors,
       titleSyntax: parseEnum(TitleSyntax, response.titleSyntax),
     };
@@ -23,7 +30,18 @@ export class AlbumCoverMapper {
     return {
       id: response.id,
       path: response.path,
+      checks: response.checks.map(AlbumCoverMapper.toCheck).filter((c) => c !== null),
       ...AlbumCoverMapper.fromMetadataResponse(response),
     };
   }
+
+  private static toCheck(check: AlbumCoverCheckResponse): AlbumCoverCheck | null {
+    const fieldName = snakeToCamelCase(check.fieldName);
+    if (!isVerifiableField(fieldName) || !isVerifierRole(check.verifierRole)) return null;
+    return { ...check, fieldName, verifierRole: check.verifierRole };
+  }
+}
+
+function snakeToCamelCase(str: string): string {
+  return str.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase());
 }

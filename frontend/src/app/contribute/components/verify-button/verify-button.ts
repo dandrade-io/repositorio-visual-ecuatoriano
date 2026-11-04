@@ -1,9 +1,10 @@
 import { Component, computed, input, model } from '@angular/core';
 import { VerifierRole } from '../../../auth/services/auth.service';
+import { VerifierIcon } from '../../../shared/icons/verifier-icon/verifier-icon';
 
 @Component({
   selector: 'app-verify-button',
-  imports: [],
+  imports: [VerifierIcon],
   templateUrl: './verify-button.html',
 })
 export class VerifyButton {

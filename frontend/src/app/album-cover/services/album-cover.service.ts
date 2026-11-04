@@ -6,6 +6,7 @@ import { AlbumCoverMapper } from '../mappers/album-cover.mapper';
 import { EnvironmentConfigService } from '../../shared/services/environment-config.service';
 import { AlbumCover, AlbumCoverResponse } from '../interfaces/album-cover.interface';
 import { AlbumCoverSummaryResponse } from '../interfaces/album-cover-summary.interface';
+import { VerifiableField } from '../enums/verifiable_fields';
 
 @Service()
 export class AlbumCoverService {
@@ -31,9 +32,23 @@ export class AlbumCoverService {
       .pipe(map(AlbumCoverMapper.fromMetadataResponse));
   }
 
-  upload(metadata: AlbumCoverMetadata, assetId: string): Observable<AlbumCover> {
+  upload(
+    metadata: AlbumCoverMetadata,
+    verifiedFields: Set<VerifiableField>,
+    assetId: string,
+  ): Observable<AlbumCover> {
+    const payload = {
+      ...metadata,
+      verifiedFields: Array.from(verifiedFields).map(camelToSnakeCase),
+      assetId,
+    };
+
     return this.http
-      .post<AlbumCoverResponse>(`${this.apiUrl}/album-cover`, { ...metadata, assetId })
+      .post<AlbumCoverResponse>(`${this.apiUrl}/album-cover`, payload)
       .pipe(map(AlbumCoverMapper.fromResponse));
   }
+}
+
+function camelToSnakeCase(str: string): string {
+  return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 }

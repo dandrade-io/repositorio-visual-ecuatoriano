@@ -17,17 +17,7 @@ import { firstValueFrom, map, startWith } from 'rxjs';
 import { Router } from '@angular/router';
 import { VerifyButton } from '../../../contribute/components/verify-button/verify-button';
 import { AuthService } from '../../../auth/services/auth.service';
-
-const VERIFIABLE_FIELDS = [
-  'title',
-  'year',
-  'artist',
-  'rhythms',
-  'representationTechnique',
-  'graphicPredominance',
-  'titleSyntax',
-] as const;
-type VerifiableField = (typeof VERIFIABLE_FIELDS)[number];
+import { VERIFIABLE_FIELDS, VerifiableField } from '../../enums/verifiable_fields';
 
 @Component({
   selector: 'register-album-cover-page',
@@ -57,7 +47,7 @@ export class RegisterAlbumCoverPage {
     artist: '',
     rhythms: '',
     representationTechnique: this.fb.control<Technique | null>(null),
-    graphicPredominance: this.fb.control<Predominance | null>(null),
+    predominance: this.fb.control<Predominance | null>(null),
     titleSyntax: this.fb.control<TitleSyntax | null>(null),
     // dominantColors: this.fb.control<[]string | null>(null),
   });
@@ -125,7 +115,7 @@ export class RegisterAlbumCoverPage {
         artist: cover.artist ?? '',
         rhythms: cover.rhythms.join(', '),
         representationTechnique: cover.representationTechnique,
-        graphicPredominance: cover.graphicPredominance,
+        predominance: cover.predominance,
         titleSyntax: cover.titleSyntax,
       });
     });
@@ -180,9 +170,14 @@ export class RegisterAlbumCoverPage {
         .filter(Boolean),
     };
 
+    const verified = this.verified();
+    const verifiedFields = new Set<VerifiableField>(
+      VERIFIABLE_FIELDS.filter((field) => verified[field]),
+    );
+
     try {
       this.submitAllowed.set(false);
-      await firstValueFrom(this.albumCoverService.upload(payload, asset.id));
+      await firstValueFrom(this.albumCoverService.upload(payload, verifiedFields, asset.id));
       this.router.navigate(['/']);
     } catch (e) {
       console.error(e);

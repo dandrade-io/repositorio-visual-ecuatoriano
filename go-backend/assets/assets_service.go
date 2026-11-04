@@ -103,7 +103,7 @@ func (s *Service) search(ctx context.Context, query string, m embedding.Model, l
 		assetIDs[i] = kBest[i].AssetId
 	}
 
-	albumCovers, err := database.QueryAlbumCoverByAssetID(ctx, assetIDs)
+	albumCovers, err := database.QueryAlbumCoverSummaryByAssetID(ctx, assetIDs)
 	if err != nil {
 		return searchResults{}, fmt.Errorf("unable to query album covers by asset ids: %w", err)
 	}

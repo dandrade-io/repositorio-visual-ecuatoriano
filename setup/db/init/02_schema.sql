@@ -17,6 +17,15 @@ CREATE TABLE album_cover(
     created_at                TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE album_cover_check(
+    id                  UUID PRIMARY KEY DEFAULT uuidv7(),
+    field_name          VARCHAR(50) NOT NULL,
+    album_cover_id      UUID NOT NULL REFERENCES album_cover(id),
+    verifier_id         UUID NOT NULL REFERENCES app_user(id),
+    verifier_role       VARCHAR(40),
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 CREATE TABLE asset(
     id          UUID PRIMARY KEY DEFAULT uuidv7(),
     path        TEXT NOT NULL UNIQUE,
@@ -27,11 +36,9 @@ CREATE TABLE asset(
 );
 
 CREATE TABLE album_cover_asset(
+    asset_id        UUID        PRIMARY KEY REFERENCES asset(id),
     album_cover_id  UUID        NOT NULL REFERENCES album_cover(id),
-    asset_id        UUID        NOT NULL REFERENCES asset(id),
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-
-    PRIMARY KEY(album_cover_id, asset_id)
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE embedding_jina_clip_v2(
@@ -39,3 +46,6 @@ CREATE TABLE embedding_jina_clip_v2(
     embedding vector(256) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE INDEX ON album_cover_check(album_cover_id);
+CREATE INDEX ON album_cover_asset(album_cover_id);

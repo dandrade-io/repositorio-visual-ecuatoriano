@@ -23,9 +23,10 @@ type AlbumCover struct {
 	PublishedBy   uuid.UUID `json:"published_by"`
 }
 
-type AlbumCoverAsset struct {
+type AlbumCoverDetails struct {
 	AlbumCover
-	Path string `json:"path"`
+	Path   string            `json:"path"`
+	Checks []AlbumCoverCheck `json:"checks"`
 }
 
 type AlbumCoverSummary struct {
@@ -37,8 +38,8 @@ type AlbumCoverSummary struct {
 	Path        string    `json:"path"`
 }
 
-func QueryAlbumCoverById(ctx context.Context, id uuid.UUID) (AlbumCoverAsset, error) {
-	var aca AlbumCoverAsset
+func QueryAlbumCoverById(ctx context.Context, id uuid.UUID) (AlbumCoverDetails, error) {
+	var ac AlbumCoverDetails
 
 	err := db.QueryRowContext(ctx,
 		`SELECT DISTINCT
@@ -48,15 +49,21 @@ func QueryAlbumCoverById(ctx context.Context, id uuid.UUID) (AlbumCoverAsset, er
 		INNER JOIN album_cover_asset aca ON aca.album_cover_id = ac.id
 		INNER JOIN asset ON aca.asset_id = asset.id
 		WHERE ac.id = $1`, id,
-	).Scan(&aca.ID, &aca.Title, &aca.Year, &aca.Artist, typeMap.SQLScanner(&aca.Rhythms), &aca.ReprTechnique,
-		&aca.Predominance, typeMap.SQLScanner(&aca.Colors), &aca.TitleSyntax, &aca.PublishedBy, &aca.Path,
+	).Scan(&ac.ID, &ac.Title, &ac.Year, &ac.Artist, typeMap.SQLScanner(&ac.Rhythms), &ac.ReprTechnique,
+		&ac.Predominance, typeMap.SQLScanner(&ac.Colors), &ac.TitleSyntax, &ac.PublishedBy, &ac.Path,
 	)
 
 	if err != nil {
-		return AlbumCoverAsset{}, err
+		return AlbumCoverDetails{}, err
 	}
 
-	return aca, nil
+	checks, err := QueryAlbumCoverChecksByAlbumCoverID(ctx, id)
+	if err != nil {
+		return AlbumCoverDetails{}, err
+	}
+	ac.Checks = checks
+
+	return ac, nil
 }
 
 func QueryAlbumCoverSummary(ctx context.Context, limit int) ([]AlbumCoverSummary, error) {
@@ -95,7 +102,7 @@ func QueryAlbumCoverSummary(ctx context.Context, limit int) ([]AlbumCoverSummary
 	return covers, nil
 }
 
-func QueryAlbumCoverByAssetID(ctx context.Context, assetIDs []uuid.UUID) (map[uuid.UUID]AlbumCoverAsset, error) {
+func QueryAlbumCoverSummaryByAssetID(ctx context.Context, assetIDs []uuid.UUID) (map[uuid.UUID]AlbumCoverSummary, error) {
 	if len(assetIDs) == 0 {
 		return nil, nil
 	}
@@ -110,18 +117,7 @@ func QueryAlbumCoverByAssetID(ctx context.Context, assetIDs []uuid.UUID) (map[uu
 	rows, err := db.QueryContext(
 		ctx,
 		`SELECT DISTINCT
-			ac.id,
-			ac.title,
-			ac.year,
-			ac.artist,
-			ac.rhythms,
-			ac.representation_technique,
-			ac.predominance,
-			ac.colors,
-			ac.title_syntax,
-			ac.published_by,
-			asset.id,
-			asset.path
+			ac.id, ac.title, ac.year, ac.artist, ac.published_by,asset.id, asset.path
 		FROM album_cover ac
 		INNER JOIN album_cover_asset aca ON aca.album_cover_id = ac.id
 		INNER JOIN asset ON aca.asset_id = asset.id
@@ -133,20 +129,14 @@ func QueryAlbumCoverByAssetID(ctx context.Context, assetIDs []uuid.UUID) (map[uu
 	}
 	defer rows.Close()
 
-	covers := make(map[uuid.UUID]AlbumCoverAsset, len(assetIDs))
+	covers := make(map[uuid.UUID]AlbumCoverSummary, len(assetIDs))
 	for rows.Next() {
-		var aca AlbumCoverAsset
+		var ac AlbumCoverSummary
 		var assetID uuid.UUID
-
-		if err := rows.Scan(
-			&aca.ID, &aca.Title, &aca.Year, &aca.Artist,
-			typeMap.SQLScanner(&aca.Rhythms), &aca.ReprTechnique, &aca.Predominance,
-			typeMap.SQLScanner(&aca.Colors), &aca.TitleSyntax, &aca.PublishedBy,
-			&assetID, &aca.Path,
-		); err != nil {
+		if err := rows.Scan(&ac.ID, &ac.Title, &ac.Year, &ac.Artist, &ac.PublishedBy, &assetID, &ac.Path); err != nil {
 			return nil, err
 		}
-		covers[assetID] = aca
+		covers[assetID] = ac
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

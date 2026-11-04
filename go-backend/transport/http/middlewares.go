@@ -13,24 +13,6 @@ import (
 	"uuid"
 )
 
-type Claims struct {
-	Subject     string `json:"sub"`
-	Typ         string `json:"typ"`
-	RealmAccess struct {
-		Roles []string `json:"roles"`
-	} `json:"realm_access"`
-	ResourceAcesss map[string]struct {
-		Roles []string `json:"roles"`
-	} `json:"resource_access"`
-}
-
-type ctxKey struct{}
-
-func ClaimsFrom(ctx context.Context) (Claims, bool) {
-	c, ok := ctx.Value(ctxKey{}).(Claims)
-	return c, ok
-}
-
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		raw, ok := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")

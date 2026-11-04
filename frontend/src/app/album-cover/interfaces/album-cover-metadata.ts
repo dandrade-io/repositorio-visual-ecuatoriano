@@ -8,7 +8,7 @@ export interface AlbumCoverMetadataResponse {
   artist: string | null;
   rhythms: string[];
   representationTechnique: string;
-  graphicPredominance: string;
+  predominance: string;
   dominantColors: string[];
   titleSyntax: string;
 }
@@ -19,7 +19,7 @@ export interface AlbumCoverMetadata {
   artist: string | null;
   rhythms: string[];
   representationTechnique: Technique | null;
-  graphicPredominance: Predominance | null;
+  predominance: Predominance | null;
   dominantColors: string[];
   titleSyntax: TitleSyntax | null;
 }
