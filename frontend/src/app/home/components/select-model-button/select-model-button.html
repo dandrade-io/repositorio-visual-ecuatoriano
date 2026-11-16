@@ -3,10 +3,13 @@
     id="model-select"
     name="model"
     aria-label="Modelo de búsqueda"
+    [value]="selected()"
     class="h-full appearance-none rounded-lg text-sm font-normal bg-gray-200 py-3 pl-4 pr-8 text-gray-900 outline-none transition-colors hover:bg-gray-300 focus:border-black/25 focus:bg-gray-300"
+    (change)="onModelSelected(selectBox.value)"
+    #selectBox
   >
     @for (model of models | keyvalue; track model.key) {
-      <option [value]="model.key">{{ model.value }}</option>
+      <option [value]="model.key" [selected]="model.key === selected()">{{ model.value }}</option>
     }
   </select>
 

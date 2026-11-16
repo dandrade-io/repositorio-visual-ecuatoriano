@@ -2,16 +2,14 @@
   <app-header />
 
   <main class="flex-1 min-h-dvh px-12 md:px-36 pt-2 pb-6">
-    <app-search-bar class="" (search)="onSearch($event.query, $event.model)" />
+    <app-search-bar
+      [query]="this.query() ?? ''"
+      [model]="this.validModel() ?? 'jina-clip-v2'"
+      (search)="onSearch($event.query, $event.model)"
+    />
 
     <div class="h-2"></div>
 
-    @if (artworksResource.isLoading()) {
-      <p class="mt-8 text-center text-sm text-gray-500">Cargando...</p>
-    } @else if (artworksResource.hasValue()) {
-      <app-artwork-grid [artworks]="artworksResource.value()" />
-    } @else if (artworksResource.error()) {
-      <p class="mt-8 text-center text-sm text-gray-500">Ocurrió un error al buscar.</p>
-    }
+    <router-outlet />
   </main>
 </div>

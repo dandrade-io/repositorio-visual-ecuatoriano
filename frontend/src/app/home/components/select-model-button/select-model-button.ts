@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, model, output } from '@angular/core';
 import { EmbeddingModel } from '../../../assets/services/assets.service';
 import { KeyValuePipe } from '@angular/common';
 
@@ -12,4 +12,10 @@ export class SelectModelButton {
     'jina-clip-v2': 'Jina CLIP v2',
     siglip2: 'SigLIP 2',
   };
+
+  readonly selected = model.required<EmbeddingModel>();
+
+  protected onModelSelected(model: string) {
+    this.selected.set(model as EmbeddingModel);
+  }
 }

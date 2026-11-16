@@ -7,6 +7,8 @@ import { EnvironmentConfigService } from '../../shared/services/environment-conf
 import { AlbumCover, AlbumCoverResponse } from '../interfaces/album-cover.interface';
 import { AlbumCoverSummaryResponse } from '../interfaces/album-cover-summary.interface';
 import { VerifiableField } from '../enums/verifiable_fields';
+import { ArtworkMapper } from '../../artwork/components/mappers/artwork.mapper';
+import { ArtworkBase } from '../../artwork/interfaces/artwork-base.interface';
 
 @Service()
 export class AlbumCoverService {
@@ -14,8 +16,10 @@ export class AlbumCoverService {
   private env = inject(EnvironmentConfigService);
   private apiUrl = this.env.get(EnvironmentConfigService.API_URL);
 
-  fetchSummary(): Observable<AlbumCoverSummaryResponse> {
-    return this.http.get<AlbumCoverSummaryResponse>(`${this.apiUrl}/album-cover`);
+  fetchSummary(): Observable<ArtworkBase[]> {
+    return this.http
+      .get<AlbumCoverSummaryResponse>(`${this.apiUrl}/album-cover`)
+      .pipe(map(ArtworkMapper.fromAlbumCoverSummaryResponse));
   }
 
   fetchById(id: string): Observable<AlbumCover> {

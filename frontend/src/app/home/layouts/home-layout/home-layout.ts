@@ -1,49 +1,30 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { SearchBar } from '../../components/search-bar/search-bar';
-import { AssetsService, EmbeddingModel } from '../../../assets/services/assets.service';
-import { rxResource } from '@angular/core/rxjs-interop';
+import { EmbeddingModel, isEmbeddingModel } from '../../../assets/services/assets.service';
 import { AuthService } from '../../../auth/services/auth.service';
-import { Router } from '@angular/router';
-import { map } from 'rxjs';
-import { ArtworkMapper } from '../../../artwork/components/mappers/artwork.mapper';
-import { ArtworkGrid } from '../../../artwork/components/artwork-grid/artwork-grid';
-import { AlbumCoverService } from '../../../album-cover/services/album-cover.service';
+import { Router, RouterOutlet } from '@angular/router';
 import { Header } from '../../../shared/components/header/header';
 
 @Component({
   selector: 'app-home-layout',
-  imports: [SearchBar, ArtworkGrid, Header],
+  imports: [SearchBar, Header, RouterOutlet],
   templateUrl: './home-layout.html',
 })
 export class HomeLayout {
   private router = inject(Router);
 
-  private albumCoverService = inject(AlbumCoverService);
-  private assetsService = inject(AssetsService);
   protected auth = inject(AuthService);
 
-  protected readonly query = signal<string>('');
-  protected readonly model = signal<EmbeddingModel>('jina-clip-v2');
+  query = input<string>('');
+  model = input<string>('');
 
-  protected readonly artworksResource = rxResource({
-    params: () => ({ query: this.query(), model: this.model() }),
-    stream: ({ params }) => {
-      // if no query value, fetch any album cover
-      if (!params.query.trim()) {
-        return this.albumCoverService
-          .fetchSummary()
-          .pipe(map(ArtworkMapper.fromAlbumCoverSummaryResponse));
-      }
-
-      return this.assetsService
-        .search({ q: params.query, kind: 'image', model: params.model, limit: 10 })
-        .pipe(map(ArtworkMapper.fromAssetSearchResponse));
-    },
+  protected readonly validModel = computed<EmbeddingModel | null>(() => {
+    const m = this.model();
+    return isEmbeddingModel(m) ? m : null;
   });
 
   onSearch(text: string, model: EmbeddingModel): void {
-    this.query.set(text);
-    this.model.set(model);
+    this.router.navigate(['/search'], { queryParams: { query: text, model: model } });
   }
 
   register() {

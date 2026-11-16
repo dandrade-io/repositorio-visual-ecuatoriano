@@ -8,7 +8,13 @@ import { Asset } from '../interfaces/asset.interface';
 import { AssetMapper } from '../mappers/asset.mapper';
 
 export type AssetKind = 'image' | 'audio';
-export type EmbeddingModel = 'jina-clip-v2' | 'siglip2';
+
+export const EMBEDDING_MODELS = ['jina-clip-v2', 'siglip2'] as const;
+export type EmbeddingModel = (typeof EMBEDDING_MODELS)[number];
+
+export function isEmbeddingModel(value: unknown): value is EmbeddingModel {
+  return typeof value === 'string' && (EMBEDDING_MODELS as readonly string[]).includes(value);
+}
 
 @Service()
 export class AssetsService {

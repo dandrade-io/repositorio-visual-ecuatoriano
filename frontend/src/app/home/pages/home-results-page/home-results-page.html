@@ -1,0 +1,7 @@
+@if (artworksResource.isLoading()) {
+  <p class="mt-8 text-center text-sm text-gray-500">Cargando...</p>
+} @else if (artworksResource.hasValue()) {
+  <app-artwork-grid [artworks]="artworksResource.value()" />
+} @else if (artworksResource.error()) {
+  <p class="mt-8 text-center text-sm text-gray-500">Ocurrió un error al buscar.</p>
+}

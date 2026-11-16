@@ -1,6 +1,5 @@
-import { Component, output, signal } from '@angular/core';
+import { Component, model, output, signal } from '@angular/core';
 import { EmbeddingModel } from '../../../assets/services/assets.service';
-import { KeyValuePipe } from '@angular/common';
 import { SearchButton } from '../search-button/search-button';
 import { SelectModelButton } from '../select-model-button/select-model-button';
 
@@ -22,13 +21,13 @@ export class SearchBar {
 
   readonly search = output<Search>();
 
-  protected readonly text = signal('');
-  protected readonly model = signal<EmbeddingModel>('jina-clip-v2');
+  readonly query = model<string>('');
+  readonly model = model.required<EmbeddingModel>();
 
   protected submit(event: Event) {
     event.preventDefault();
 
-    const query = this.text().trim();
+    const query = this.query().trim();
     const model = this.model();
     if (!query) return;
 
