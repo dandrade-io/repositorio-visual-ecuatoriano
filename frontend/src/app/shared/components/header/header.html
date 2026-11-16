@@ -1,7 +1,7 @@
 <header
   class="sticky top-0 z-100 flex flex-row justify-between items-center px-12 py-2 bg-[#F8F8FD]/90 backdrop-blur"
 >
-  <a routerLink="/" aria-label="Inicio"><img class="size-14 md:size-22" src="logo.svg" alt="" /></a>
+  <a routerLink="/" aria-label="Inicio"> <app-logo class="block size-14 md:size-22"> </app-logo> </a>
 
   <div class="flex flex-row items-center">
     @if (auth.authenticated()) {
@@ -11,13 +11,11 @@
       <div class="w-3"></div>
       <app-profile-menu />
     } @else {
-      <app-button (click)="register()" color="#DBDBDB" class="cursor-pointer h-10"
+      <app-button (click)="register()" color="#E5E7EB" class="cursor-pointer h-10"
         >Registrarse</app-button
       >
       <div class="w-3"></div>
-      <app-button (click)="login()" color="#155dfc" class="cursor-pointer h-10"
-        >Iniciar sesión</app-button
-      >
+      <app-button (click)="login()" class="cursor-pointer h-10">Iniciar sesión</app-button>
     }
   </div>
 </header>

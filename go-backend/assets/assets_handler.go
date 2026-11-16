@@ -37,15 +37,9 @@ func (h *Handler) Upload(w http.ResponseWriter, r *http.Request) error {
 	}
 	defer info.file.Close()
 
-	asset, err := h.Svc.Create(r.Context(), info.file, info.kind, userID)
+	asset, err := h.Svc.Create(r.Context(), CreateInput{File: info.file, Kind: info.kind, UserID: userID, Embed: embed})
 	if err != nil {
 		return &transporthttp.Error{Status: http.StatusInternalServerError, Msg: "unable to store asset", Cause: err}
-	}
-
-	if embed {
-		if err := h.Svc.embedAndSave(r.Context(), asset, info.model); err != nil {
-			return &transporthttp.Error{Status: http.StatusInternalServerError, Msg: "unable to embed asset", Cause: err}
-		}
 	}
 
 	w.Header().Set("Content-type", "application/json")
@@ -123,7 +117,7 @@ func (h *Handler) Search(w http.ResponseWriter, r *http.Request) error {
 		limit = num
 	}
 
-	result, err := h.Svc.search(r.Context(), q, model, limit)
+	result, err := h.Svc.Search(r.Context(), q, model, limit)
 	if err != nil {
 		return &transporthttp.Error{Status: http.StatusInternalServerError, Msg: "unable to search for k-best candidates", Cause: err}
 	}

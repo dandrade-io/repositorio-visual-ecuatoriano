@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { SearchBar } from '../../components/search-bar/search-bar';
-import { AssetsService } from '../../../assets/services/assets.service';
+import { AssetsService, EmbeddingModel } from '../../../assets/services/assets.service';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../../auth/services/auth.service';
 import { Router } from '@angular/router';
@@ -23,25 +23,27 @@ export class HomeLayout {
   protected auth = inject(AuthService);
 
   protected readonly query = signal<string>('');
+  protected readonly model = signal<EmbeddingModel>('jina-clip-v2');
 
   protected readonly artworksResource = rxResource({
-    params: () => this.query(),
+    params: () => ({ query: this.query(), model: this.model() }),
     stream: ({ params }) => {
       // if no query value, fetch any album cover
-      if (!params.trim()) {
+      if (!params.query.trim()) {
         return this.albumCoverService
           .fetchSummary()
           .pipe(map(ArtworkMapper.fromAlbumCoverSummaryResponse));
       }
 
       return this.assetsService
-        .search({ q: params, kind: 'image', model: 'jina-clip-v2', limit: 10 })
+        .search({ q: params.query, kind: 'image', model: params.model, limit: 10 })
         .pipe(map(ArtworkMapper.fromAssetSearchResponse));
     },
   });
 
-  onSearch(text: string): void {
+  onSearch(text: string, model: EmbeddingModel): void {
     this.query.set(text);
+    this.model.set(model);
   }
 
   register() {

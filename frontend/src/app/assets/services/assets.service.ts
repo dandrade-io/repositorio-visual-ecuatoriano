@@ -8,7 +8,7 @@ import { Asset } from '../interfaces/asset.interface';
 import { AssetMapper } from '../mappers/asset.mapper';
 
 export type AssetKind = 'image' | 'audio';
-export type EmbeddingModel = 'jina-clip-v2';
+export type EmbeddingModel = 'jina-clip-v2' | 'siglip2';
 
 @Service()
 export class AssetsService {

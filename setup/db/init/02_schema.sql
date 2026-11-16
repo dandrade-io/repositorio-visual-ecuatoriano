@@ -47,5 +47,11 @@ CREATE TABLE embedding_jina_clip_v2(
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE embedding_siglip2(
+    asset_id UUID PRIMARY KEY REFERENCES asset(id) ON DELETE CASCADE,
+    embedding vector(1024) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 CREATE INDEX ON album_cover_check(album_cover_id);
 CREATE INDEX ON album_cover_asset(album_cover_id);

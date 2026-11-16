@@ -43,7 +43,7 @@ USER app
 
 EXPOSE 8001
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=180s --retries=3 \
     CMD python -c "import socket; socket.create_connection(('127.0.0.1', 8001), 3)" || exit 1
 
 ENTRYPOINT ["fastapi", "run", "app/main.py", "--port", "8001"]

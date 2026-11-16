@@ -4,11 +4,12 @@ import { AuthService } from '../../../auth/services/auth.service';
 import { Button } from '../button/button';
 import { SquarePlus } from '../../icons/square-plus/square-plus';
 import { ProfileMenu } from '../profile-menu/profile-menu';
+import { Logo } from '../logo/logo';
 
 @Component({
   selector: 'app-header',
   host: { class: 'contents' },
-  imports: [RouterLink, Button, SquarePlus, ProfileMenu],
+  imports: [RouterLink, Button, SquarePlus, ProfileMenu, Logo],
   templateUrl: './header.html',
 })
 export class Header {

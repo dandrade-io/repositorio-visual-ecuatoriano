@@ -59,8 +59,8 @@ func (s *Service) Create(ctx context.Context, in CreateInput) (database.AlbumCov
 		return database.AlbumCover{}, fmt.Errorf("failed to retrieve asset %s: %w", asset.ID, err)
 	}
 
-	m := embedding.JinaClipV2
-	embedding, err := embedding.EmbedAsset(ctx, asset.Path, asset.Kind, m)
+	models := []embedding.Model{embedding.JinaClipV2, embedding.SigLIP2}
+	embeddings, err := embedding.EmbedAsset(ctx, asset.Path, asset.Kind, models)
 	if err != nil {
 		return database.AlbumCover{}, fmt.Errorf("failed to generate embedding: %w", err)
 	}
@@ -69,9 +69,11 @@ func (s *Service) Create(ctx context.Context, in CreateInput) (database.AlbumCov
 	albumCover.ID = uuid.New()
 
 	err = database.WithTx(ctx, func(tx *sql.Tx) error {
-		e := database.Embedding{AssetID: asset.ID, Vector: pgvector.NewVector(embedding)}
-		if err := database.InsertEmbeddingTx(ctx, tx, e, m); err != nil {
-			return fmt.Errorf("failed to insert embedding: %w", err)
+		for _, e := range embeddings {
+			r := database.Embedding{AssetID: asset.ID, Vector: pgvector.NewVector(e.Embedding)}
+			if err := database.InsertEmbeddingTx(ctx, tx, r, e.Model); err != nil {
+				return fmt.Errorf("failed to insert embedding: %w", err)
+			}
 		}
 
 		if err := database.InsertAlbumCoverTx(ctx, tx, albumCover); err != nil {

@@ -5,7 +5,7 @@ services:
     build:
       context: ./frontend
     environment:
-      KC_URL: http://localhost:8002
+      KC_URL: ${KC_BASE_URL}
       KC_REALM: ${KC_REALM}
       KC_CLIENT_ID: angular-client
       API_URL: ${API_URL}
@@ -24,6 +24,7 @@ services:
       POSTGRES_PORT: "5432"
       POSTGRES_DB: ${POSTGRES_DB}
       EMBED_SERVICE_BASE_URL: http://service:8001
+      EMBED_SERVICE_API_KEY: ${EMBED_SERVICE_API_KEY}
       BACKEND_BASE_URL: ${BACKEND_BASE_URL}
       LLM_BASE_URL: ${LLM_BASE_URL}
       LLM_API_KEY: ${LLM_API_KEY}
@@ -47,6 +48,9 @@ services:
   service:
     container_name: service
     profiles: ["app"]
+    environment:
+      HF_HOME: /home/app/.cache/huggingface
+      EMBED_SERVICE_API_KEY: ${EMBED_SERVICE_API_KEY}
     build:
       context: ./python-service
     volumes:
@@ -79,10 +83,12 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:26.8.1
     container_name: auth-keycloak
-    command: start-dev --import-realm
+    command: ${KC_COMMAND:-start-dev --import-realm}
     environment:
       KC_HOSTNAME: ${KC_BASE_URL}
       KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: -xforwarded
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD}
       KC_DB: postgres
@@ -91,7 +97,7 @@ services:
       KC_DB_PASSWORD: ${KC_DB_PASSWORD}
       KC_HEALTH_ENABLED: "true"
     ports:
-      - "8002:8080"
+      - "127.0.0.1:8002:8080"
     volumes:
       - ./setup/keycloak/realms:/opt/keycloak/data/import:ro
     depends_on:

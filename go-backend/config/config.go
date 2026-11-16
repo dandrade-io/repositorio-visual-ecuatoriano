@@ -8,22 +8,20 @@ import (
 )
 
 var (
-	DBUser     string
-	DBPassword string
-	DBHost     string
-	DBPort     string
-	DBName     string
-
+	DBUser          string
+	DBPassword      string
+	DBHost          string
+	DBPort          string
+	DBName          string
 	EmbedServiceURL string
 	PublicBaseURL   string
-
-	LLMBaseUrl string
-	LLMApiKey  string
-	LLMModel   string
-
-	KCIssuerURL string
-	KCBaseURL   string
-	KCRealm     string
+	LLMBaseUrl      string
+	LLMApiKey       string
+	LLMModel        string
+	KCIssuerURL     string
+	KCBaseURL       string
+	KCRealm         string
+	CAPath          string
 )
 
 func init() {
@@ -51,4 +49,6 @@ func init() {
 	KCIssuerURL = os.Getenv("KC_ISSUER_URL")
 	KCBaseURL = os.Getenv("KC_BASE_URL")
 	KCRealm = os.Getenv("KC_REALM")
+
+	CAPath = os.Getenv("CA_PATH")
 }

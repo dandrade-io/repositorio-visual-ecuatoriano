@@ -1,5 +1,5 @@
 from PIL.Image import Image
-from torch._prims_common import Tensor
+from torch import Tensor
 from transformers import AutoModel
 
 from app.core.models.base import VisionLanguageModel
@@ -11,8 +11,12 @@ class JinaClipV2(VisionLanguageModel):
         self._truncate_dim = truncate_dim
 
     def load(self):
+        sha: str = "e10d47f5691d0454a0fb5d13f46f2199b74cb436"
+
         self._model = AutoModel.from_pretrained(
-            "jinaai/jina-clip-v2", trust_remote_code=True
+            "jinaai/jina-clip-v2",
+            trust_remote_code=True,
+            revision=sha,
         )
 
     def encode_text(self, texts: list[str]) -> Tensor:

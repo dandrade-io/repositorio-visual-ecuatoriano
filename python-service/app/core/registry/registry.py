@@ -1,13 +1,21 @@
+import threading
+
+
 class ModelRegistry[T]:
     def __init__(self, model_classes: dict[str, type[T]]) -> None:
         self._model_classes: dict[str, type[T]] = model_classes
         self._loaded: dict[str, T] = {}
+        self._locks = {name: threading.Lock() for name in model_classes}
 
     def get(self, name: str):
         if name not in self._model_classes:
             raise ValueError(f"Unknown model: {name}")
-        if name not in self._loaded:
-            self._loaded[name] = self._instantiate(name)
+        if name in self._loaded:
+            return self._loaded[name]
+
+        with self._locks[name]:
+            if name not in self._loaded:
+                self._loaded[name] = self._instantiate(name)
 
         return self._loaded[name]
 

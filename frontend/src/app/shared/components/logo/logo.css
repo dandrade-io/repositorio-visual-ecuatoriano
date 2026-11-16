@@ -1,0 +1,46 @@
+.o {
+  fill: var(--primary, #c8704a);
+}
+
+.og {
+  fill: #b0623d;
+  fill: color-mix(in srgb, var(--primary, #c8704a) 82%, #000);
+}
+
+.k {
+  fill: var(--logo-dark, #1a1a1a);
+}
+
+.kl {
+  stroke: var(--logo-dark, #1a1a1a);
+  stroke-width: 5.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.kt {
+  stroke: var(--logo-dark, #1a1a1a);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.g {
+  stroke: var(--logo-gray, #8a8580);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.n {
+  stroke: var(--logo-navy, #1b2452);
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.m {
+  stroke-width: 7;
+}
+
+.t {
+  stroke-width: 5.5;
+}

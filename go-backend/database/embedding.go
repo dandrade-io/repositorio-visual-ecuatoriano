@@ -14,6 +14,8 @@ func embeddingModelToTableName(m embedding.Model) string {
 	switch m {
 	case embedding.JinaClipV2:
 		return "jina_clip_v2"
+	case embedding.SigLIP2:
+		return "siglip2"
 	default:
 		return ""
 	}
@@ -28,9 +30,9 @@ func createEmbeddingQuery(e Embedding, m embedding.Model) (string, []any) {
 	return "INSERT INTO embedding_" + embeddingModelToTableName(m) + " (asset_id, embedding) VALUES($1, $2)", []any{e.AssetID, e.Vector}
 }
 
-func InsertEmbedding(e Embedding, m embedding.Model) error {
+func InsertEmbedding(ctx context.Context, e Embedding, m embedding.Model) error {
 	q, args := createEmbeddingQuery(e, m)
-	_, err := db.Exec(q, args...)
+	_, err := db.ExecContext(ctx, q, args...)
 
 	if err != nil {
 		return err

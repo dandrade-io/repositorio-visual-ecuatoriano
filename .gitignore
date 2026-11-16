@@ -2,3 +2,5 @@
 resources
 .DS_Store
 assets-storage
+
+.certs

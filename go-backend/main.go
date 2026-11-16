@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"repository/albumcover"
 	"repository/assets"
-	"repository/embedding"
 	"uuid"
 
 	"repository/database"
@@ -39,16 +38,16 @@ func main() {
 	mux.Handle("GET /api/v1/assets/search", transporthttp.AppHandler(assetsHandler.Search))
 	mux.Handle("GET /api/v1/assets/{path...}", transporthttp.AppHandler(assetsHandler.Get))
 	mux.Handle("POST /api/v1/assets", chain(transporthttp.AppHandler(assetsHandler.Upload), auth, ensureUser))
-	mux.Handle("POST /api/v1/assets/{id}/embeddings", transporthttp.AppHandler(assetsHandler.Embed))
-	mux.Handle("POST /api/v1/assets/{id}/metadata/album-cover", transporthttp.AppHandler(albumcoverHandler.MetadataFromAsset))
+	mux.Handle("POST /api/v1/assets/{id}/embeddings", chain(transporthttp.AppHandler(assetsHandler.Embed), auth))
+	mux.Handle("POST /api/v1/assets/{id}/metadata/album-cover", chain(transporthttp.AppHandler(albumcoverHandler.MetadataFromAsset), auth))
 
 	mux.Handle("GET /api/v1/album-cover/{id}", transporthttp.AppHandler(albumcoverHandler.GetByID))
 	mux.Handle("GET /api/v1/album-cover", transporthttp.AppHandler(albumcoverHandler.Get))
 	mux.Handle("POST /api/v1/album-cover", chain(transporthttp.AppHandler(albumcoverHandler.Upload), auth, ensureUser))
-	mux.Handle("POST /api/v1/metadata/album-cover", transporthttp.AppHandler(albumcoverHandler.MetadataFromUpload))
+	mux.Handle("POST /api/v1/metadata/album-cover", chain(transporthttp.AppHandler(albumcoverHandler.MetadataFromUpload), auth))
 
 	server := &http.Server{
-		Addr:    ":8080",
+		Addr:    "localhost:8080",
 		Handler: transporthttp.LoggerMiddleware(mux),
 	}
 
@@ -90,7 +89,11 @@ func main() {
 
 func ingestInitialData() {
 	slog.Info("Ingest Initial Data: Starting...")
-	userID := uuid.MustParse("bcf3ebc7-b52c-4b95-8517-e967f8d2cd6f")
+	userID := uuid.MustParse("a0332878-3ff6-4667-a4a0-903478dc317c")
+	if err := database.InsertUser(context.Background(), userID); err != nil {
+		slog.Error("Ingest Initial Data: unable to insert user", "user", userID, "error", err)
+		return
+	}
 
 	wd, err := os.Getwd()
 	if err != nil {
@@ -119,7 +122,9 @@ func ingestInitialData() {
 		}
 
 		wg.Go(func() {
-			if err := service.Ingest(context.Background(), file, "image", embedding.JinaClipV2, userID); err != nil {
+			in := assets.CreateInput{File: file, Kind: "image", UserID: userID, Embed: true}
+
+			if _, err := service.Create(context.Background(), in); err != nil {
 				slog.Error("Ingest Initial Data: failed to ingest asset", "path", p, "error", err)
 			}
 		})
