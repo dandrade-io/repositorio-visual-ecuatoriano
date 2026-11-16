@@ -5,12 +5,12 @@ services:
     build:
       context: ./frontend
     environment:
-      KC_URL: ${KC_BASE_URL}
+      KC_URL: ${KC_ISSUER_URL}
       KC_REALM: ${KC_REALM}
       KC_CLIENT_ID: angular-client
       API_URL: ${API_URL}
     ports:
-      - "4200:8080"
+      - "127.0.0.1:4200:8080"
 
   backend:
     container_name: backend
@@ -23,7 +23,7 @@ services:
       POSTGRES_HOST: db
       POSTGRES_PORT: "5432"
       POSTGRES_DB: ${POSTGRES_DB}
-      EMBED_SERVICE_BASE_URL: http://service:8001
+      EMBED_SERVICE_BASE_URL: http://embed-service:8001
       EMBED_SERVICE_API_KEY: ${EMBED_SERVICE_API_KEY}
       BACKEND_BASE_URL: ${BACKEND_BASE_URL}
       LLM_BASE_URL: ${LLM_BASE_URL}
@@ -33,7 +33,7 @@ services:
       KC_BASE_URL: http://auth-keycloak:8080${KC_RELATIVE_PATH:-}
       KC_REALM: ${KC_REALM}
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     volumes:
       - ./go-backend/assets-storage:/assets-storage
     networks:
@@ -45,17 +45,20 @@ services:
       keycloak:
         condition: service_healthy
 
-  service:
-    container_name: service
+  embed-service:
+    container_name: embed-service
     profiles: ["app"]
     environment:
       HF_HOME: /home/app/.cache/huggingface
       EMBED_SERVICE_API_KEY: ${EMBED_SERVICE_API_KEY}
     build:
       context: ./python-service
+    ports:
+      - "127.0.0.1:8001:8001"
     volumes:
       - hf-cache:/home/app/.cache/huggingface
     networks:
+      - public
       - private
 
   db:
@@ -85,7 +88,7 @@ services:
     container_name: auth-keycloak
     command: ${KC_COMMAND:-start-dev --import-realm}
     environment:
-      KC_HOSTNAME: ${KC_BASE_URL}
+      KC_HOSTNAME: ${KC_ISSUER_URL}
       KC_HTTP_RELATIVE_PATH: ${KC_RELATIVE_PATH:-/}
       KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
       KC_HTTP_ENABLED: "true"

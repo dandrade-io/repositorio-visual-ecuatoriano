@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"repository/config"
 )
@@ -33,7 +32,6 @@ func EmbedText(ctx context.Context, text string, model Model) ([]float32, error)
 	}
 
 	url := config.EmbedServiceURL + "/api/v1/embed/text"
-	slog.Info(url + "AAAAA")
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, body)
 	if err != nil {
 		return nil, err
@@ -113,7 +111,7 @@ func EmbedAsset(ctx context.Context, assetPath string, assetKind string, models 
 	results := make([]EmbedResult, 0, len(resp.Results))
 	for _, r := range resp.Results {
 		m := Model(r.Model)
-		if m.Valid() {
+		if !m.Valid() {
 			continue
 		}
 		results = append(results, EmbedResult{Model: m, Embedding: r.Embedding})

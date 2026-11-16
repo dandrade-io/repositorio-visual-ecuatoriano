@@ -175,12 +175,17 @@ export class RegisterAlbumCoverPage {
       VERIFIABLE_FIELDS.filter((field) => verified[field]),
     );
 
+    this.submitAllowed.set(false);
     try {
-      this.submitAllowed.set(false);
-      await firstValueFrom(this.albumCoverService.upload(payload, verifiedFields, asset.id));
-      this.router.navigate(['/']);
+      const { id } = await firstValueFrom(
+        this.albumCoverService.upload(payload, verifiedFields, asset.id),
+      );
+
+      await this.router.navigate(['/artwork', 'album-cover', id]);
     } catch (e) {
       console.error(e);
+      this.submitAllowed.set(true); // only re-enable on failure so it can't be double-submitted
+      return;
     }
 
     this.submitAllowed.set(true);

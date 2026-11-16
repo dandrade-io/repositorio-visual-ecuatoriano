@@ -13,6 +13,7 @@
       spellcheck="false"
       [value]="text()"
       (input)="text.set($any($event.target).value)"
+      (keydown.enter)="$event.preventDefault(); submit($event)"
       placeholder="Describe lo que buscas con términos visuales"
       class="min-w-0 flex-1 bg-transparent py-2.5 text-base text-gray-900 outline-none placeholder:text-gray-400"
     />

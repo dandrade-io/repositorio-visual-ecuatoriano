@@ -95,7 +95,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	w.Header().Set("Content-type", "application/json")
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(&resp{Results: covers}); err != nil {
 		return err
 	}

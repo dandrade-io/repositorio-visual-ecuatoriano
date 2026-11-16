@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { AlbumCoverService } from '../../services/album-cover.service';
 import { VerifiableField } from '../../enums/verifiable_fields';
@@ -21,6 +21,9 @@ export class AlbumCoverPage {
   private readonly assetsService = inject(AssetsService);
 
   id = input.required<string>();
+
+  protected readonly imgLoaded = signal(false);
+  protected readonly imgFailed = signal(false);
 
   protected readonly albumCoverResource = rxResource({
     params: () => this.id(),

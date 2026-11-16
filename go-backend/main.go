@@ -47,7 +47,7 @@ func main() {
 	mux.Handle("POST /api/v1/metadata/album-cover", chain(transporthttp.AppHandler(albumcoverHandler.MetadataFromUpload), auth))
 
 	server := &http.Server{
-		Addr:    "localhost:8080",
+		Addr:    ":8080",
 		Handler: transporthttp.LoggerMiddleware(mux),
 	}
 

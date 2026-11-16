@@ -24,6 +24,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		tok, err := auth.Verfier.Verify(r.Context(), raw)
 		if err != nil {
+			slog.Warn("token verification failed", "error", err)
 			w.Header().Set("WWW-Authenticate", `Bearer error="invalid_token"`)
 			http.Error(w, "invalid token", http.StatusUnauthorized)
 			return
@@ -31,6 +32,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		var claims Claims
 		if err := tok.Claims(&claims); err != nil || claims.Typ != "Bearer" {
+			slog.Warn("token claims rejected", "error", err, "typ", claims.Typ)
 			http.Error(w, "invalid token", http.StatusUnauthorized)
 			return
 		}

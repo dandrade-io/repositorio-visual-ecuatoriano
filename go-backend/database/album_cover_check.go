@@ -38,6 +38,10 @@ func InsertAlbumCoverCheckTx(
 	ctx context.Context, tx *sql.Tx,
 	fields map[AlbumCoverField]struct{}, albumCoverID uuid.UUID, verifierID uuid.UUID, verifierRol string,
 ) error {
+	if len(fields) == 0 {
+		return nil
+	}
+
 	args := make([]any, 0, len(fields)*4)
 	placeholders := make([]string, 0, len(fields))
 

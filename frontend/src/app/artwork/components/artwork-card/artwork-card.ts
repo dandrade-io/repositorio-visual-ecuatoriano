@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { ArtworkBase } from '../../interfaces/artwork-base.interface';
 import { EnvironmentConfigService } from '../../../shared/services/environment-config.service';
 import { DecimalPipe } from '@angular/common';
@@ -16,6 +16,9 @@ export class ArtworkCard {
   protected readonly env = inject(EnvironmentConfigService);
 
   readonly artwork = input.required<ArtworkBase>();
+
+  protected readonly imgLoaded = signal(false);
+  protected readonly imgFailed = signal(false);
 
   protected readonly imageUrl = computed(() => {
     const apiUrl = this.env.get(EnvironmentConfigService.API_URL);

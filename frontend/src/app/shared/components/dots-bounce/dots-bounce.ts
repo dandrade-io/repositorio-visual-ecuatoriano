@@ -6,15 +6,15 @@ import { Component } from '@angular/core';
   template: `
     <div class="flex gap-2" role="status" aria-label="Loading">
       <span
-        class="size-3.5 animate-dot-wave rounded-full bg-[#155dfc] [animation-delay:-0.3s] motion-reduce:animate-none"
+        class="size-3.5 animate-dot-wave rounded-full bg-[#C8704A] [animation-delay:-0.3s] motion-reduce:animate-none"
         aria-hidden="true"
       ></span>
       <span
-        class="size-3.5 animate-dot-wave rounded-full bg-[#155dfc] [animation-delay:-0.15s] motion-reduce:animate-none"
+        class="size-3.5 animate-dot-wave rounded-full bg-[#C8704A] [animation-delay:-0.15s] motion-reduce:animate-none"
         aria-hidden="true"
       ></span>
       <span
-        class="size-3.5 animate-dot-wave rounded-full bg-[#155dfc] motion-reduce:animate-none"
+        class="size-3.5 animate-dot-wave rounded-full bg-[#C8704A] motion-reduce:animate-none"
         aria-hidden="true"
       ></span>
     </div>

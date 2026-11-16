@@ -1,13 +1,66 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Frontend</title>
-  <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-</head>
-<body>
-  <app-root></app-root>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <title>Repositorio Visual Ecuatoriano</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+
+    <style>
+      body {
+        margin: 0;
+        background: #f8f8fd;
+      }
+      .splash {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+      }
+      .dots {
+        display: flex;
+        gap: 8px;
+      }
+      .dots span {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #C8704A;
+        animation: dot-wave 1.2s ease-in-out infinite;
+      }
+      .dots span:nth-child(1) {
+        animation-delay: -0.3s;
+      }
+      .dots span:nth-child(2) {
+        animation-delay: -0.15s;
+      }
+      @keyframes dot-wave {
+        0%,
+        60%,
+        100% {
+          transform: translateY(0);
+          opacity: 0.5;
+        }
+        30% {
+          transform: translateY(-60%);
+          opacity: 1;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .dots span {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <app-root>
+      <div class="splash">
+        <div class="dots" role="status" aria-label="Cargando">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+    </app-root>
+  </body>
 </html>

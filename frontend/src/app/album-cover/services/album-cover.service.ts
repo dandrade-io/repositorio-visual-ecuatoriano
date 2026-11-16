@@ -36,16 +36,14 @@ export class AlbumCoverService {
     metadata: AlbumCoverMetadata,
     verifiedFields: Set<VerifiableField>,
     assetId: string,
-  ): Observable<AlbumCover> {
+  ): Observable<{ id: string }> {
     const payload = {
       ...metadata,
       verifiedFields: Array.from(verifiedFields).map(camelToSnakeCase),
       assetId,
     };
 
-    return this.http
-      .post<AlbumCoverResponse>(`${this.apiUrl}/album-cover`, payload)
-      .pipe(map(AlbumCoverMapper.fromResponse));
+    return this.http.post<{ id: string }>(`${this.apiUrl}/album-cover`, payload);
   }
 }
 

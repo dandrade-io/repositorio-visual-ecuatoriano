@@ -1,14 +1,27 @@
 <li class="group">
   <div
     (click)="navigateToDetailsPage()"
-    class="cursor-pointer relative aspect-square overflow-hidden rounded-md border border-black/10 bg-gray-50 (click)=()"
+    class="cursor-pointer relative aspect-square overflow-hidden rounded-md border border-black/10 bg-gray-50"
   >
-    <img
-      [src]="imageUrl()"
-      [alt]="artwork().title ?? 'Portada de álbum'"
-      loading="lazy"
-      class="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
-    />
+    @if (!imgLoaded() && !imgFailed()) {
+      <div class="absolute inset-0 animate-pulse bg-gray-200"></div>
+    }
+
+    @if (!imgFailed()) {
+      <img
+        [src]="imageUrl()"
+        [alt]="artwork().title ?? 'Portada de álbum'"
+        loading="lazy"
+        (load)="imgLoaded.set(true)"
+        (error)="imgFailed.set(true)"
+        class="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+        [class.opacity-0]="!imgLoaded()"
+      />
+    } @else {
+      <span class="grid h-full w-full place-items-center font-normal text-sm text-gray-900">
+        Imagen no disponible
+      </span>
+    }
 
     @if (artwork().score) {
       <span

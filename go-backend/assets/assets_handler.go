@@ -26,7 +26,7 @@ func (h *Handler) Upload(w http.ResponseWriter, r *http.Request) error {
 	userID, _ := uuid.Parse(claim.Subject)
 
 	embed := false
-	if val, err := strconv.ParseBool(r.URL.Query().Get("embed")); err != nil {
+	if val, err := strconv.ParseBool(r.URL.Query().Get("embed")); err == nil {
 		embed = val
 	}
 
