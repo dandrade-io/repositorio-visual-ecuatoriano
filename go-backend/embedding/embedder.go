@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"repository/config"
 )
@@ -32,13 +33,15 @@ func EmbedText(ctx context.Context, text string, model Model) ([]float32, error)
 	}
 
 	url := config.EmbedServiceURL + "/api/v1/embed/text"
+	slog.Info(url + "AAAAA")
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, body)
 	if err != nil {
 		return nil, err
 	}
 
+	httpReq.Header.Set("X-API-Key", config.EmbedServiceApiKey)
 	httpReq.Header.Set("Content-Type", "application/json")
-	httpResp, err := http.DefaultClient.Do(httpReq)
+	httpResp, err := client.Do(httpReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make http petition: %w", err)
 	}
@@ -90,8 +93,9 @@ func EmbedAsset(ctx context.Context, assetPath string, assetKind string, models 
 		return nil, err
 	}
 
+	httpReq.Header.Set("X-API-Key", config.EmbedServiceApiKey)
 	httpReq.Header.Set("Content-Type", "application/json")
-	httpResp, err := http.DefaultClient.Do(httpReq)
+	httpResp, err := client.Do(httpReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make http petition: %w", err)
 	}

@@ -17,7 +17,11 @@ class SigLip2(VisionLanguageModel):
 
     def encode_text(self, texts: list[str]) -> torch.Tensor:
         inputs = self._processor(
-            text=[t.lower() for t in texts], return_tensors="pt"
+            text=[t.lower() for t in texts],
+            return_tensors="pt",
+            padding="max_length",
+            max_length=64,
+            truncation=True,
         ).to(self._model.device)
 
         with torch.no_grad():

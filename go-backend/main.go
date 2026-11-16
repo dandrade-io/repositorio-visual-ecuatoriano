@@ -129,7 +129,7 @@ func ingestInitialData() {
 			}
 		})
 
-		if i%10 == 0 {
+		if i%5 == 0 {
 			wg.Wait()
 		}
 	}

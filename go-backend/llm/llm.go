@@ -2,12 +2,8 @@ package llm
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"os"
 	"reflect"
 	"repository/config"
 
@@ -28,31 +24,15 @@ func init() {
 		return
 	}
 
-	pem, err := os.ReadFile(config.CAPath)
+	c, err := config.ClientWithPEM(config.CAPath)
 	if err != nil {
 		panic(err)
-	}
-
-	pool, err := x509.SystemCertPool()
-	if err != nil || pool == nil {
-		pool = x509.NewCertPool()
-	}
-
-	if !pool.AppendCertsFromPEM(pem) {
-		panic(fmt.Errorf("no valid certificate found in CA file"))
-	}
-
-	tlsConfig := &tls.Config{
-		RootCAs: pool,
-	}
-	tr := &http.Transport{
-		TLSClientConfig: tlsConfig,
 	}
 
 	client = openai.NewClient(
 		option.WithBaseURL(config.LLMBaseUrl),
 		option.WithAPIKey(config.LLMApiKey),
-		option.WithHTTPClient(&http.Client{Transport: tr}),
+		option.WithHTTPClient(c),
 	)
 }
 

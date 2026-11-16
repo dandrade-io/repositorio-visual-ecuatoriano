@@ -1,26 +1,22 @@
 package embedding
 
-type Model string
-
-const (
-	JinaClipV2 Model = "jina-clip-v2"
-	SigLIP2    Model = "siglip2"
+import (
+	"net/http"
+	"repository/config"
 )
 
-func (m Model) Valid() bool {
-	switch m {
-	case JinaClipV2:
-		return true
-	case SigLIP2:
-		return true
+var client *http.Client
+
+func init() {
+	if config.CAPath == "" {
+		client = http.DefaultClient
+		return
 	}
 
-	return false
-}
-
-func (m Model) String() string {
-	if !m.Valid() {
-		return "unknown(" + string(m) + ")"
+	c, err := config.ClientWithPEM(config.CAPath)
+	if err != nil {
+		panic(err)
 	}
-	return string(m)
+
+	client = c
 }
