@@ -35,7 +35,8 @@ func main() {
 	chain := transporthttp.Chain
 
 	mux := http.NewServeMux()
-	mux.Handle("GET /api/v1/assets/search", transporthttp.AppHandler(assetsHandler.Search))
+	mux.Handle("GET /api/v1/assets/search", transporthttp.AppHandler(assetsHandler.SearchByText))
+	mux.Handle("POST /api/v1/assets/search", transporthttp.AppHandler(assetsHandler.SearchByAsset))
 	mux.Handle("GET /api/v1/assets/{path...}", transporthttp.AppHandler(assetsHandler.Get))
 	mux.Handle("POST /api/v1/assets", chain(transporthttp.AppHandler(assetsHandler.Upload), auth, ensureUser))
 	mux.Handle("POST /api/v1/assets/{id}/embeddings", chain(transporthttp.AppHandler(assetsHandler.Embed), auth))

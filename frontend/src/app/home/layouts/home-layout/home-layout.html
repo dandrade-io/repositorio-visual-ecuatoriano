@@ -5,7 +5,7 @@
     <app-search-bar
       [query]="this.query() ?? ''"
       [model]="this.validModel() ?? 'jina-clip-v2'"
-      (search)="onSearch($event.query, $event.model)"
+      (search)="onSearch($event.query, $event.asset ?? null, $event.model)"
     />
 
     <div class="h-2"></div>

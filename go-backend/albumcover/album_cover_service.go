@@ -60,7 +60,7 @@ func (s *Service) Create(ctx context.Context, in CreateInput) (database.AlbumCov
 	}
 
 	models := []embedding.Model{embedding.JinaClipV2, embedding.SigLIP2}
-	embeddings, err := embedding.EmbedAsset(ctx, asset.Path, asset.Kind, models)
+	embeddings, err := embedding.EmbedAssetURL(ctx, asset.Path, asset.Kind, models)
 	if err != nil {
 		return database.AlbumCover{}, fmt.Errorf("failed to generate embedding: %w", err)
 	}

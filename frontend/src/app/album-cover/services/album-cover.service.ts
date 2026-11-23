@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
 import { AlbumCoverMetadata, AlbumCoverMetadataResponse } from '../interfaces/album-cover-metadata';
 import { map, Observable } from 'rxjs';
@@ -16,9 +16,11 @@ export class AlbumCoverService {
   private env = inject(EnvironmentConfigService);
   private apiUrl = this.env.get(EnvironmentConfigService.API_URL);
 
-  fetchSummary(): Observable<ArtworkBase[]> {
+  fetchSummary(limit: number = 10): Observable<ArtworkBase[]> {
+    let params = new HttpParams().set('limit', limit);
+
     return this.http
-      .get<AlbumCoverSummaryResponse>(`${this.apiUrl}/album-cover`)
+      .get<AlbumCoverSummaryResponse>(`${this.apiUrl}/album-cover`, { params })
       .pipe(map(ArtworkMapper.fromAlbumCoverSummaryResponse));
   }
 

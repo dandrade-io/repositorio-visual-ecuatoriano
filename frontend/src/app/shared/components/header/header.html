@@ -1,7 +1,9 @@
 <header
-  class="sticky top-0 z-100 flex flex-row justify-between items-center px-12 py-2 bg-[#F8F8FD]/90 backdrop-blur"
+  class="sticky top-0 z-100 flex flex-row justify-between items-center px-12 py-6 bg-[#F8F8FD]/90 backdrop-blur"
 >
-  <a routerLink="/" aria-label="Inicio"> <app-logo class="block size-14 md:size-22"> </app-logo> </a>
+  <a routerLink="/" aria-label="Inicio">
+    <img src="logo-alter-negro.png" alt="" class="h-10 md:h-12" />
+  </a>
 
   <div class="flex flex-row items-center">
     @if (auth.authenticated()) {

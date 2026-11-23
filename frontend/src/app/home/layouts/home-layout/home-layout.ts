@@ -4,6 +4,7 @@ import { EmbeddingModel, isEmbeddingModel } from '../../../assets/services/asset
 import { AuthService } from '../../../auth/services/auth.service';
 import { Router, RouterOutlet } from '@angular/router';
 import { Header } from '../../../shared/components/header/header';
+import { ArtworkSearchService } from '../../services/artwork-search-service';
 
 @Component({
   selector: 'app-home-layout',
@@ -12,6 +13,7 @@ import { Header } from '../../../shared/components/header/header';
 })
 export class HomeLayout {
   private router = inject(Router);
+  private searchService = inject(ArtworkSearchService);
 
   protected auth = inject(AuthService);
 
@@ -23,8 +25,15 @@ export class HomeLayout {
     return isEmbeddingModel(m) ? m : null;
   });
 
-  onSearch(text: string, model: EmbeddingModel): void {
-    this.router.navigate(['/search'], { queryParams: { query: text, model: model } });
+  protected onSearch(text: string, asset: File | null, model: EmbeddingModel): void {
+    const query = text.trim();
+    if (!asset && !query) return;
+
+    this.searchService.asset.set(asset);
+    const mode = asset ? 'image' : 'text';
+    const q = asset ? null : query;
+
+    this.router.navigate(['/search'], { queryParams: { model, mode: mode, query: q } });
   }
 
   register() {

@@ -7,7 +7,7 @@ import { EnvironmentConfigService } from '../../shared/services/environment-conf
 import { Asset } from '../interfaces/asset.interface';
 import { AssetMapper } from '../mappers/asset.mapper';
 
-export type AssetKind = 'image' | 'audio';
+export type Modality = 'image' | 'audio';
 
 export const EMBEDDING_MODELS = ['jina-clip-v2', 'siglip2'] as const;
 export type EmbeddingModel = (typeof EMBEDDING_MODELS)[number];
@@ -37,6 +37,20 @@ export class AssetsService {
     if (limit !== undefined) params = params.set('limit', limit);
 
     return this.http.get<AssetSearchResponse>(`${this.apiUrl}/assets/search`, { params });
+  }
+
+  searchByAsset(
+    asset: File,
+    modality: Modality,
+    model: EmbeddingModel,
+    limit: number,
+  ): Observable<AssetSearchResponse> {
+    let params = new HttpParams().set('modality', modality).set('model', model).set('limit', limit);
+
+    const body = new FormData();
+    body.append('file', asset, asset.name);
+
+    return this.http.post<AssetSearchResponse>(`${this.apiUrl}/assets/search`, body, { params });
   }
 
   getAssetUrl(path: string): string {

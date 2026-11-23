@@ -41,7 +41,7 @@ func (s *Service) Create(ctx context.Context, in CreateInput) (database.Asset, e
 		return asset, nil
 	}
 
-	embeddings, err := embedding.EmbedAsset(ctx, asset.Path, asset.Kind, []embedding.Model{embedding.JinaClipV2, embedding.SigLIP2})
+	embeddings, err := embedding.EmbedAssetURL(ctx, asset.Path, asset.Kind, []embedding.Model{embedding.JinaClipV2, embedding.SigLIP2})
 	if err != nil {
 		return database.Asset{}, fmt.Errorf("failed to generate embeddings: %w", err)
 	}
@@ -93,7 +93,7 @@ func (s *Service) EmbedByAssetID(ctx context.Context, assetID uuid.UUID, model e
 		return err
 	}
 
-	embeddings, err := embedding.EmbedAsset(ctx, asset.Path, asset.Kind, []embedding.Model{model})
+	embeddings, err := embedding.EmbedAssetURL(ctx, asset.Path, asset.Kind, []embedding.Model{model})
 	if err != nil || len(embeddings) == 0 {
 		return fmt.Errorf("failed to generate embedding of asset %s: %w", assetID, err)
 	}
@@ -106,13 +106,51 @@ func (s *Service) EmbedByAssetID(ctx context.Context, assetID uuid.UUID, model e
 	return nil
 }
 
-func (s *Service) Search(ctx context.Context, query string, m embedding.Model, limit int) (searchResults, error) {
+func (s *Service) SearchByText(ctx context.Context, query string, m embedding.Model, limit int) (searchResults, error) {
 	embedding, err := embedding.EmbedText(ctx, query, m)
 	if err != nil {
 		return searchResults{}, fmt.Errorf("unable to compute embedding for text: %w", err)
 	}
 
 	kBest, err := database.GetKBest(ctx, m, pgvector.NewVector(embedding), limit)
+	if err != nil {
+		return searchResults{}, fmt.Errorf("unable to search for k-best coincidence: %w", err)
+	}
+
+	assetIDs := make([]uuid.UUID, len(kBest))
+	for i := range kBest {
+		assetIDs[i] = kBest[i].AssetId
+	}
+
+	albumCovers, err := database.QueryAlbumCoverSummaryByAssetID(ctx, assetIDs)
+	if err != nil {
+		return searchResults{}, fmt.Errorf("unable to query album covers by asset ids: %w", err)
+	}
+
+	sr := searchResults{Results: make([]result, 0, len(albumCovers))}
+	for _, b := range kBest {
+		r := result{Score: b.Similarity, Type: Assets}
+
+		if ac, ok := albumCovers[b.AssetId]; ok {
+			r.Content = ac
+			r.Type = AlbumCover
+		} else {
+			r.Content = map[string]any{"path": "image/" + b.AssetId.String()}
+		}
+
+		sr.Results = append(sr.Results, r)
+	}
+
+	return sr, nil
+}
+
+func (s *Service) SearchByAsset(ctx context.Context, asset io.Reader, model embedding.Model, modality embedding.Modality, limit int) (searchResults, error) {
+	embedding, err := embedding.EmbedAsset(ctx, asset, model, modality)
+	if err != nil {
+		return searchResults{}, fmt.Errorf("unable to compute embedding for asset: %w", err)
+	}
+
+	kBest, err := database.GetKBest(ctx, model, pgvector.NewVector(embedding), limit)
 	if err != nil {
 		return searchResults{}, fmt.Errorf("unable to search for k-best coincidence: %w", err)
 	}

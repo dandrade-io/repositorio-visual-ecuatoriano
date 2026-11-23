@@ -9,6 +9,7 @@ import {
 import { map } from 'rxjs';
 import { ArtworkMapper } from '../../../artwork/components/mappers/artwork.mapper';
 import { ArtworkGrid } from '../../../artwork/components/artwork-grid/artwork-grid';
+import { ArtworkSearchService } from '../../services/artwork-search-service';
 
 @Component({
   selector: 'app-home-results-page',
@@ -18,6 +19,7 @@ import { ArtworkGrid } from '../../../artwork/components/artwork-grid/artwork-gr
 export class HomeResultsPage {
   private assetsService = inject(AssetsService);
   private albumCoverService = inject(AlbumCoverService);
+  private searchService = inject(ArtworkSearchService);
 
   query = input<string>('');
   model = input<string>('');
@@ -28,10 +30,22 @@ export class HomeResultsPage {
   });
 
   protected readonly artworksResource = rxResource({
-    params: () => ({ query: this.query(), model: this.validModel() }),
+    params: () => ({
+      query: this.query(),
+      model: this.validModel(),
+      asset: this.searchService.asset(),
+    }),
     stream: ({ params }) => {
-      if (!params.query || !params.model) {
-        return this.albumCoverService.fetchSummary();
+      if ((!params.query && !params.asset) || !params.model) {
+        return this.albumCoverService.fetchSummary(10);
+      }
+
+      console.log(params.asset);
+
+      if (params.asset) {
+        return this.assetsService
+          .searchByAsset(params.asset, 'image', params.model, 10)
+          .pipe(map(ArtworkMapper.fromAssetSearchResponse));
       }
 
       return this.assetsService

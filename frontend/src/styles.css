@@ -3,7 +3,8 @@
 @import 'tailwindcss';
 
 :root {
-  --primary: #C8704A;
+  /* --primary: #C8704A; */
+  --primary: #000000;
   /* --primary: #155DFC; */
   --primary-foreground: #ffffff;
 }

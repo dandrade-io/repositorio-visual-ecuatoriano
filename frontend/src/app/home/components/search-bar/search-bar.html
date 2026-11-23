@@ -1,26 +1,35 @@
 <form
   role="search"
-  class="mx-auto flex justify-center w-full max-w-3xl items-center gap-3"
+  class="mx-auto flex justify-center w-full max-w-3xl items-center"
   (submit)="submit($event)"
 >
+  <app-attachment-button (selected)="asset.set($event)" />
+  <div class="w-3.25"></div>
+
   <div
     class="overflow-hidden pl-4 flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-black/10 bg-gray-50 transition-colors focus-within:border-black/25 focus-within:bg-white"
   >
-    <input
-      #inputBox
-      type="search"
-      name="q"
-      autocomplete="off"
-      spellcheck="false"
-      [value]="query()"
-      (input)="query.set(inputBox.value)"
-      (keydown.enter)="$event.preventDefault(); submit($event)"
-      placeholder="Describe lo que buscas con términos visuales"
-      class="min-w-0 flex-1 bg-transparent py-2.5 text-base text-gray-900 outline-none placeholder:text-gray-400"
-    />
+    @if (asset(); as ass) {
+      <app-attachment-preview [name]="ass.name" (remove)="asset.set(null)" />
+      <div class="flex-1"></div>
+    } @else {
+      <input
+        #inputBox
+        type="search"
+        name="q"
+        autocomplete="off"
+        spellcheck="false"
+        [value]="query()"
+        (input)="query.set(inputBox.value)"
+        (keydown.enter)="$event.preventDefault(); submit($event)"
+        placeholder="Describe lo que buscas con términos visuales"
+        class="min-w-0 flex-1 bg-transparent py-2.5 text-base text-gray-900 outline-none placeholder:text-gray-400"
+      />
+    }
 
     <app-select-model-button [(selected)]="model" />
   </div>
 
+  <div class="w-3.25"></div>
   <app-search-button />
 </form>

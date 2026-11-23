@@ -40,4 +40,5 @@ dependencies = [
     "torchvision>=0.29.0",
     "transformers==4.51.3",
     "torch>=2.9",
+    "python-multipart>=0.0.32",
 ]

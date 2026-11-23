@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"repository/config"
 )
@@ -57,7 +58,53 @@ func EmbedText(ctx context.Context, text string, model Model) ([]float32, error)
 	return resp.Embedding, nil
 }
 
-func EmbedAsset(ctx context.Context, assetPath string, assetKind string, models []Model) ([]EmbedResult, error) {
+func EmbedAsset(ctx context.Context, asset io.Reader, model Model, modality Modality) ([]float32, error) {
+	type embedResp struct {
+		Model     string    `json:"model"`
+		Embedding []float32 `json:"embedding"`
+	}
+
+	var body bytes.Buffer
+	mw := multipart.NewWriter(&body)
+
+	part, err := mw.CreateFormFile("file", "file")
+	if err != nil {
+		return nil, err
+	}
+	if _, err := io.Copy(part, asset); err != nil {
+		return nil, err
+	}
+	if err := mw.WriteField("model", model.String()); err != nil {
+		return nil, err
+	}
+	if err := mw.Close(); err != nil {
+		return nil, err
+	}
+
+	u := config.EmbedServiceURL + "/api/v1/embed/" + modality.String() + "/upload"
+	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, u, &body)
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+	req.Header.Set("X-API-Key", config.EmbedServiceApiKey)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make http petition: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		b, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("failed to make request (%d): %s", resp.StatusCode, string(b))
+	}
+
+	var content embedResp
+	if err := json.NewDecoder(resp.Body).Decode(&content); err != nil {
+		return nil, err
+	}
+
+	return content.Embedding, nil
+}
+
+func EmbedAssetURL(ctx context.Context, assetPath string, assetKind string, models []Model) ([]EmbedResult, error) {
 	type embedReq struct {
 		AssetURL string   `json:"asset_url"`
 		Models   []string `json:"models"`

@@ -9,7 +9,11 @@ async def fetch_and_prepare_image(url: str, target_size: int = 512):
         response = await client.get(url)
         response.raise_for_status()
 
-    img = Image.open(BytesIO(response.content))
+    return prepare_image(response.content, target_size)
+
+
+def prepare_image(data: bytes, target_size: int = 512):
+    img = Image.open(BytesIO(data))
     img = ImageOps.exif_transpose(img)
     img = img.convert("RGB")
 

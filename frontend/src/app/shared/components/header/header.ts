@@ -9,7 +9,7 @@ import { Logo } from '../logo/logo';
 @Component({
   selector: 'app-header',
   host: { class: 'contents' },
-  imports: [RouterLink, Button, SquarePlus, ProfileMenu, Logo],
+  imports: [RouterLink, Button, SquarePlus, ProfileMenu],
   templateUrl: './header.html',
 })
 export class Header {

@@ -1,11 +1,18 @@
 import { ArtworkType } from '../../artwork/interfaces/artwork-base.interface';
-import { AssetKind, EmbeddingModel } from '../services/assets.service';
+import { Modality, EmbeddingModel } from '../services/assets.service';
 
 export interface AssetSearchParams {
   q: string;
-  kind: AssetKind;
+  kind: Modality;
   model?: EmbeddingModel;
   limit?: number;
+}
+
+export interface AssetSearchAssetParams {
+  asset: File;
+  modality: Modality;
+  model: EmbeddingModel;
+  limit: number;
 }
 
 export interface AssetSearchResponse {

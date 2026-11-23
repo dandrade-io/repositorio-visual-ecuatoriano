@@ -92,7 +92,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (h *Handler) Search(w http.ResponseWriter, r *http.Request) error {
+func (h *Handler) SearchByText(w http.ResponseWriter, r *http.Request) error {
 	q := r.URL.Query().Get("q")
 	kind := r.URL.Query().Get("kind")
 	model := embedding.JinaClipV2
@@ -117,7 +117,51 @@ func (h *Handler) Search(w http.ResponseWriter, r *http.Request) error {
 		limit = num
 	}
 
-	result, err := h.Svc.Search(r.Context(), q, model, limit)
+	result, err := h.Svc.SearchByText(r.Context(), q, model, limit)
+	if err != nil {
+		return &transporthttp.Error{Status: http.StatusInternalServerError, Msg: "unable to search for k-best candidates", Cause: err}
+	}
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(&result); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (h *Handler) SearchByAsset(w http.ResponseWriter, r *http.Request) error {
+	modality := embedding.Modality(r.URL.Query().Get("modality"))
+	model := embedding.Model(r.URL.Query().Get("model"))
+	limit := 10
+
+	if !modality.Valid() {
+		return &transporthttp.Error{Status: http.StatusBadRequest, Msg: "unknown modality provided, it must be \"text\", \"image\" or \"audio\""}
+	}
+	if !model.Valid() {
+		return &transporthttp.Error{Status: http.StatusBadRequest, Msg: "unknown model provided"}
+	}
+	if num, err := strconv.Atoi(r.URL.Query().Get("limit")); err == nil {
+		limit = num
+	}
+
+	if err := r.ParseMultipartForm(1024 * 1024); err != nil {
+		return &transporthttp.Error{Status: http.StatusBadRequest, Msg: "not able to parse multipart form", Cause: err}
+	}
+
+	headers := r.MultipartForm.File["file"]
+	if len(headers) != 1 {
+		return &transporthttp.Error{Status: http.StatusBadRequest, Msg: "only one asset must be provided"}
+	}
+
+	file, err := headers[0].Open()
+	if err != nil {
+		return &transporthttp.Error{Status: http.StatusBadRequest, Msg: "unable to process file", Cause: err}
+	}
+	defer file.Close()
+
+	result, err := h.Svc.SearchByAsset(r.Context(), file, model, modality, limit)
 	if err != nil {
 		return &transporthttp.Error{Status: http.StatusInternalServerError, Msg: "unable to search for k-best candidates", Cause: err}
 	}
