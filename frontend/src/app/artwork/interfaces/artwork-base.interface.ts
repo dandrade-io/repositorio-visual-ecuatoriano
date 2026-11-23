@@ -5,7 +5,8 @@ export interface ArtworkBase {
   title: string | null;
   artist?: string | null;
   year?: number | null;
-  imageUrl: string;
+  url: string;
+  kind: string;
   score: number | null;
   type: ArtworkType;
 }

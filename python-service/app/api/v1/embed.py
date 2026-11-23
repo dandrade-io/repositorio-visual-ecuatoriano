@@ -9,6 +9,8 @@ from app.api.v1.dto.embed_dto import (
     EmbedResult,
     EmbedTextRequest,
 )
+from app.core.registry.audio_registry import audio_registry
+from app.core.registry.models import SUPPORTED_AUDIO_MODELS
 from app.core.registry.vision_registry import vision_registry
 from app.core.utils import fetch_and_prepare_image, prepare_image
 
@@ -40,8 +42,12 @@ async def embed_image_upload(
 
 
 @router.post("/text", response_model=EmbedResult)
-def embed_text(req: EmbedTextRequest):
-    model = vision_registry.get(req.model)
-    vector = model.encode_text([req.text])[0]
+async def embed_text(req: EmbedTextRequest):
+    registry = audio_registry if req.model in SUPPORTED_AUDIO_MODELS else vision_registry
+
+    def run():
+        return registry.get(req.model).encode_text([req.text])[0]
+
+    vector = await asyncio.to_thread(run)
 
     return EmbedResult(model=req.model, embedding=vector.tolist())

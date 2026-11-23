@@ -7,7 +7,7 @@ const (
 	Assets     AssetType = "assets"
 )
 
-type searchResults struct {
+type searchResult struct {
 	Results []result `json:"results"`
 }
 

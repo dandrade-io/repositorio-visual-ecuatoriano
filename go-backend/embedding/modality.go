@@ -3,14 +3,13 @@ package embedding
 type Modality string
 
 const (
-	Text  Modality = "text"
 	Image Modality = "image"
 	Audio Modality = "audio"
 )
 
 func (a Modality) Valid() bool {
 	switch a {
-	case Text, Image, Audio:
+	case Image, Audio:
 		return true
 	}
 

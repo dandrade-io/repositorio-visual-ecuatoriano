@@ -104,7 +104,7 @@ func EmbedAsset(ctx context.Context, asset io.Reader, model Model, modality Moda
 	return content.Embedding, nil
 }
 
-func EmbedAssetURL(ctx context.Context, assetPath string, assetKind string, models []Model) ([]EmbedResult, error) {
+func EmbedAssetURL(ctx context.Context, assetPath string, modality Modality, models []Model) ([]EmbedResult, error) {
 	type embedReq struct {
 		AssetURL string   `json:"asset_url"`
 		Models   []string `json:"models"`
@@ -132,7 +132,7 @@ func EmbedAssetURL(ctx context.Context, assetPath string, assetKind string, mode
 		return nil, err
 	}
 
-	url := config.EmbedServiceURL + "/api/v1/embed/" + assetKind
+	url := config.EmbedServiceURL + "/api/v1/embed/" + modality.String()
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, body)
 	if err != nil {
 		return nil, err

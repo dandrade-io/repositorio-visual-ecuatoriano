@@ -7,6 +7,7 @@ from app.api.v1.router import api_v1_router
 from app.core.registry.vision_registry import vision_registry
 
 preload_models: list[str] = ["jina-clip-v2", "siglip2"]
+# preload_audio_models: list[str] = ["clamp3"]
 
 
 @asynccontextmanager

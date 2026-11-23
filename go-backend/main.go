@@ -123,7 +123,7 @@ func ingestInitialData() {
 		}
 
 		wg.Go(func() {
-			in := assets.CreateInput{File: file, Kind: "image", UserID: userID, Embed: true}
+			in := assets.CreateInput{File: file, Modality: "image", UserID: userID, Embed: true}
 
 			if _, err := service.Create(context.Background(), in); err != nil {
 				slog.Error("Ingest Initial Data: failed to ingest asset", "path", p, "error", err)

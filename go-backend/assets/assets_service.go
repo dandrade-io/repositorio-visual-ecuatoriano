@@ -19,20 +19,20 @@ import (
 type Service struct{}
 
 type CreateInput struct {
-	File   io.Reader
-	Kind   string
-	UserID uuid.UUID
-	Embed  bool
+	File     io.Reader
+	Modality embedding.Modality
+	UserID   uuid.UUID
+	Embed    bool
 }
 
 func (s *Service) Create(ctx context.Context, in CreateInput) (database.Asset, error) {
 	id := uuid.NewV7()
-	path, err := s.SaveLocally(in.File, id.String(), in.Kind)
+	path, err := s.SaveLocally(in.File, id.String(), in.Modality)
 	if err != nil {
 		return database.Asset{}, fmt.Errorf("unable to save asset locally: %w", err)
 	}
 
-	var asset = database.Asset{ID: id, Path: path, Kind: in.Kind, UploadedBy: in.UserID}
+	var asset = database.Asset{ID: id, Path: path, Kind: in.Modality.String(), UploadedBy: in.UserID}
 
 	if !in.Embed {
 		if err := database.InsertAsset(ctx, asset); err != nil {
@@ -41,7 +41,15 @@ func (s *Service) Create(ctx context.Context, in CreateInput) (database.Asset, e
 		return asset, nil
 	}
 
-	embeddings, err := embedding.EmbedAssetURL(ctx, asset.Path, asset.Kind, []embedding.Model{embedding.JinaClipV2, embedding.SigLIP2})
+	var models []embedding.Model
+	switch in.Modality {
+	case embedding.Image:
+		models = []embedding.Model{embedding.JinaClipV2, embedding.SigLIP2}
+	case embedding.Audio:
+		models = []embedding.Model{embedding.CLaMP3}
+	}
+
+	embeddings, err := embedding.EmbedAssetURL(ctx, asset.Path, embedding.Modality(asset.Kind), models)
 	if err != nil {
 		return database.Asset{}, fmt.Errorf("failed to generate embeddings: %w", err)
 	}
@@ -69,9 +77,9 @@ func (s *Service) Create(ctx context.Context, in CreateInput) (database.Asset, e
 }
 
 // SaveLocally saves file in the filesystem and returns the relative path
-func (s *Service) SaveLocally(file io.Reader, filename string, kind string) (string, error) {
-	switch kind {
-	case "image":
+func (s *Service) SaveLocally(file io.Reader, filename string, modality embedding.Modality) (string, error) {
+	switch modality {
+	case embedding.Image:
 		compressed, err := media.CompressImg(file, 85)
 		if err != nil {
 			return "", err
@@ -79,7 +87,7 @@ func (s *Service) SaveLocally(file io.Reader, filename string, kind string) (str
 		file = bytes.NewReader(compressed)
 	}
 
-	path, err := files.SaveFile(file, filepath.Join(kind, filename))
+	path, err := files.SaveFile(file, filepath.Join(modality.String(), filename))
 	if err != nil {
 		return "", err
 	}
@@ -93,7 +101,7 @@ func (s *Service) EmbedByAssetID(ctx context.Context, assetID uuid.UUID, model e
 		return err
 	}
 
-	embeddings, err := embedding.EmbedAssetURL(ctx, asset.Path, asset.Kind, []embedding.Model{model})
+	embeddings, err := embedding.EmbedAssetURL(ctx, asset.Path, embedding.Modality(asset.Kind), []embedding.Model{model})
 	if err != nil || len(embeddings) == 0 {
 		return fmt.Errorf("failed to generate embedding of asset %s: %w", assetID, err)
 	}
@@ -106,53 +114,28 @@ func (s *Service) EmbedByAssetID(ctx context.Context, assetID uuid.UUID, model e
 	return nil
 }
 
-func (s *Service) SearchByText(ctx context.Context, query string, m embedding.Model, limit int) (searchResults, error) {
-	embedding, err := embedding.EmbedText(ctx, query, m)
+func (s *Service) SearchByText(ctx context.Context, query string, model embedding.Model, modality embedding.Modality, limit int) (searchResult, error) {
+	embedding, err := embedding.EmbedText(ctx, query, model)
 	if err != nil {
-		return searchResults{}, fmt.Errorf("unable to compute embedding for text: %w", err)
+		return searchResult{}, fmt.Errorf("unable to compute embedding for text: %w", err)
 	}
 
-	kBest, err := database.GetKBest(ctx, m, pgvector.NewVector(embedding), limit)
-	if err != nil {
-		return searchResults{}, fmt.Errorf("unable to search for k-best coincidence: %w", err)
-	}
-
-	assetIDs := make([]uuid.UUID, len(kBest))
-	for i := range kBest {
-		assetIDs[i] = kBest[i].AssetId
-	}
-
-	albumCovers, err := database.QueryAlbumCoverSummaryByAssetID(ctx, assetIDs)
-	if err != nil {
-		return searchResults{}, fmt.Errorf("unable to query album covers by asset ids: %w", err)
-	}
-
-	sr := searchResults{Results: make([]result, 0, len(albumCovers))}
-	for _, b := range kBest {
-		r := result{Score: b.Similarity, Type: Assets}
-
-		if ac, ok := albumCovers[b.AssetId]; ok {
-			r.Content = ac
-			r.Type = AlbumCover
-		} else {
-			r.Content = map[string]any{"path": "image/" + b.AssetId.String()}
-		}
-
-		sr.Results = append(sr.Results, r)
-	}
-
-	return sr, nil
+	return s.search(ctx, embedding, model, limit)
 }
 
-func (s *Service) SearchByAsset(ctx context.Context, asset io.Reader, model embedding.Model, modality embedding.Modality, limit int) (searchResults, error) {
+func (s *Service) SearchByAsset(ctx context.Context, asset io.Reader, model embedding.Model, modality embedding.Modality, limit int) (searchResult, error) {
 	embedding, err := embedding.EmbedAsset(ctx, asset, model, modality)
 	if err != nil {
-		return searchResults{}, fmt.Errorf("unable to compute embedding for asset: %w", err)
+		return searchResult{}, fmt.Errorf("unable to compute embedding for asset: %w", err)
 	}
 
+	return s.search(ctx, embedding, model, limit)
+}
+
+func (s *Service) search(ctx context.Context, embedding []float32, model embedding.Model, limit int) (searchResult, error) {
 	kBest, err := database.GetKBest(ctx, model, pgvector.NewVector(embedding), limit)
 	if err != nil {
-		return searchResults{}, fmt.Errorf("unable to search for k-best coincidence: %w", err)
+		return searchResult{}, fmt.Errorf("unable to search for k-best coincidence: %w", err)
 	}
 
 	assetIDs := make([]uuid.UUID, len(kBest))
@@ -162,10 +145,10 @@ func (s *Service) SearchByAsset(ctx context.Context, asset io.Reader, model embe
 
 	albumCovers, err := database.QueryAlbumCoverSummaryByAssetID(ctx, assetIDs)
 	if err != nil {
-		return searchResults{}, fmt.Errorf("unable to query album covers by asset ids: %w", err)
+		return searchResult{}, fmt.Errorf("unable to query album covers by asset ids: %w", err)
 	}
 
-	sr := searchResults{Results: make([]result, 0, len(albumCovers))}
+	sr := searchResult{Results: make([]result, 0, len(albumCovers))}
 	for _, b := range kBest {
 		r := result{Score: b.Similarity, Type: Assets}
 
@@ -173,7 +156,7 @@ func (s *Service) SearchByAsset(ctx context.Context, asset io.Reader, model embe
 			r.Content = ac
 			r.Type = AlbumCover
 		} else {
-			r.Content = map[string]any{"path": "image/" + b.AssetId.String()}
+			r.Content = map[string]any{"id": b.AssetId, "kind": b.Kind, "path": b.Path}
 		}
 
 		sr.Results = append(sr.Results, r)

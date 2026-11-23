@@ -31,5 +31,6 @@ export interface Content {
   year: number | null;
   artist: string | null;
   published_by: string;
+  kind: string | null;
   path: string;
 }

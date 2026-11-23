@@ -16,6 +16,8 @@ func embeddingModelToTableName(m embedding.Model) string {
 		return "jina_clip_v2"
 	case embedding.SigLIP2:
 		return "siglip2"
+	case embedding.CLaMP3:
+		return "clamp3"
 	default:
 		return ""
 	}
@@ -50,15 +52,23 @@ func InsertEmbeddingTx(ctx context.Context, tx *sql.Tx, e Embedding, m embedding
 
 type EmbeddingCoincidence struct {
 	AssetId    uuid.UUID
+	Kind       string
+	Path       string
 	Similarity float32
 }
 
 func GetKBest(ctx context.Context, m embedding.Model, vector pgvector.Vector, limit int) ([]EmbeddingCoincidence, error) {
 	query := `
-		SELECT asset_id, (1 - (embedding <=> $1)) AS similarity
-		FROM embedding_` + embeddingModelToTableName(m) + `
-		ORDER BY embedding <=> $1
-		LIMIT $2
+		WITH knn AS (
+			SELECT asset_id, embedding <=> $1 AS dist
+			FROM embedding_` + embeddingModelToTableName(m) + `
+			ORDER BY embedding <=> $1
+			LIMIT $2
+		)
+		SELECT knn.asset_id, a.kind, a.path, 1 - knn.dist AS similarity
+		FROM knn
+		JOIN asset a ON a.id = knn.asset_id
+		ORDER BY knn.dist;
 		`
 
 	rows, err := db.QueryContext(ctx, query, vector, limit)
@@ -70,11 +80,11 @@ func GetKBest(ctx context.Context, m embedding.Model, vector pgvector.Vector, li
 	results := make([]EmbeddingCoincidence, 0, limit)
 
 	for rows.Next() {
-		var ec EmbeddingCoincidence
-		if err := rows.Scan(&ec.AssetId, &ec.Similarity); err != nil {
+		var e EmbeddingCoincidence
+		if err := rows.Scan(&e.AssetId, &e.Kind, &e.Path, &e.Similarity); err != nil {
 			return nil, err
 		}
-		results = append(results, ec)
+		results = append(results, e)
 	}
 
 	if err := rows.Err(); err != nil {

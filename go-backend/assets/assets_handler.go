@@ -25,7 +25,7 @@ func (h *Handler) Upload(w http.ResponseWriter, r *http.Request) error {
 	claim, _ := transporthttp.ClaimsFrom(r.Context())
 	userID, _ := uuid.Parse(claim.Subject)
 
-	embed := false
+	embed := true
 	if val, err := strconv.ParseBool(r.URL.Query().Get("embed")); err == nil {
 		embed = val
 	}
@@ -37,7 +37,7 @@ func (h *Handler) Upload(w http.ResponseWriter, r *http.Request) error {
 	}
 	defer info.file.Close()
 
-	asset, err := h.Svc.Create(r.Context(), CreateInput{File: info.file, Kind: info.kind, UserID: userID, Embed: embed})
+	asset, err := h.Svc.Create(r.Context(), CreateInput{File: info.file, Modality: info.modality, UserID: userID, Embed: embed})
 	if err != nil {
 		return &transporthttp.Error{Status: http.StatusInternalServerError, Msg: "unable to store asset", Cause: err}
 	}
@@ -94,30 +94,24 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) error {
 
 func (h *Handler) SearchByText(w http.ResponseWriter, r *http.Request) error {
 	q := r.URL.Query().Get("q")
-	kind := r.URL.Query().Get("kind")
-	model := embedding.JinaClipV2
+	modality := embedding.Modality(r.URL.Query().Get("kind"))
+	model := embedding.Model(r.URL.Query().Get("model"))
 	limit := 10
 
 	if strings.TrimSpace(q) == "" {
 		return &transporthttp.Error{Status: http.StatusBadRequest, Msg: "a query value must be provided"}
 	}
-	if strings.TrimSpace(kind) == "" {
-		return &transporthttp.Error{Status: http.StatusBadRequest, Msg: "a kind value must be provided"}
+	if !modality.Valid() {
+		return &transporthttp.Error{Status: http.StatusBadRequest, Msg: "unknown modality provided, it must be \"text\", \"image\" or \"audio\""}
 	}
-	if kind != "image" && kind != "audio" {
-		return &transporthttp.Error{Status: http.StatusBadRequest, Msg: "kind value must be \"image\" or \"audio\" "}
-	}
-	if name := strings.TrimSpace(r.URL.Query().Get("model")); name != "" {
-		model = embedding.Model(name)
-		if !model.Valid() {
-			return &transporthttp.Error{Status: http.StatusBadRequest, Msg: "unknown model provided"}
-		}
+	if !model.Valid() {
+		return &transporthttp.Error{Status: http.StatusBadRequest, Msg: "unknown model provided"}
 	}
 	if num, err := strconv.Atoi(r.URL.Query().Get("limit")); err == nil {
 		limit = num
 	}
 
-	result, err := h.Svc.SearchByText(r.Context(), q, model, limit)
+	result, err := h.Svc.SearchByText(r.Context(), q, model, modality, limit)
 	if err != nil {
 		return &transporthttp.Error{Status: http.StatusInternalServerError, Msg: "unable to search for k-best candidates", Cause: err}
 	}
@@ -176,9 +170,9 @@ func (h *Handler) SearchByAsset(w http.ResponseWriter, r *http.Request) error {
 }
 
 type multipartInfo struct {
-	file  multipart.File
-	model embedding.Model
-	kind  string
+	file     multipart.File
+	model    embedding.Model
+	modality embedding.Modality
 }
 
 func parseMultipartFile(r *http.Request, embed bool) (multipartInfo, error) {
@@ -217,15 +211,15 @@ func parseMultipartFile(r *http.Request, embed bool) (multipartInfo, error) {
 	}
 	file.Seek(0, io.SeekStart)
 
-	var kind string
+	var modality embedding.Modality
 	if idx := strings.Index(mime, "/"); idx != -1 {
-		kind = mime[:idx]
+		modality = embedding.Modality(mime[:idx])
 	}
 
-	if kind != "image" && kind != "audio" {
+	if !modality.Valid() {
 		file.Close()
 		return multipartInfo{}, &transporthttp.Error{Status: http.StatusBadRequest, Msg: "invalid file type"}
 	}
 
-	return multipartInfo{file: file, model: model, kind: kind}, nil
+	return multipartInfo{file: file, model: model, modality: modality}, nil
 }

@@ -9,7 +9,7 @@ import { AssetMapper } from '../mappers/asset.mapper';
 
 export type Modality = 'image' | 'audio';
 
-export const EMBEDDING_MODELS = ['jina-clip-v2', 'siglip2'] as const;
+export const EMBEDDING_MODELS = ['jina-clip-v2', 'siglip2', 'clamp3'] as const;
 export type EmbeddingModel = (typeof EMBEDDING_MODELS)[number];
 
 export function isEmbeddingModel(value: unknown): value is EmbeddingModel {

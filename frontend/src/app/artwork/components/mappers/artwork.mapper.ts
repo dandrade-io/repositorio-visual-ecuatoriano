@@ -12,9 +12,10 @@ export class ArtworkMapper {
       title: r.content.title,
       artist: r.content.artist,
       year: r.content.year,
-      imageUrl: r.content.path,
+      url: r.content.path,
       score: r.score,
       type: r.type,
+      kind: r.content.kind ?? '',
     }));
   }
 
@@ -28,9 +29,10 @@ export class ArtworkMapper {
       title: albumCover.title,
       artist: albumCover.artist,
       year: albumCover.year,
-      imageUrl: albumCover.path,
+      url: albumCover.path,
       score: null,
       type: 'album-cover',
+      kind: 'image',
     };
   }
 }

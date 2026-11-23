@@ -11,6 +11,7 @@ export class SelectModelButton {
   protected readonly models: Record<EmbeddingModel, string> = {
     'jina-clip-v2': 'Jina CLIP v2',
     siglip2: 'SigLIP 2',
+    'clamp3': 'CLaMP3'
   };
 
   readonly selected = model.required<EmbeddingModel>();
